@@ -1,8 +1,8 @@
 (hakem 1)
-; KÖTÜ BELGE: metaforun karşı örneği hedef kuramın modeli değildir (kredi mevduatı değiştirmiyor).
-(sig phys (fn E 1 ampirik) (rel Exch 2 tanim))
+; BAD DOCUMENT: the metaphor's counterexample is not a model of the target theory (the loan does not change deposits).
+(sig phys (fn E 1 empirical) (rel Exch 2 definitional))
 (theory Physics phys (ax cons (all (all (imp (Exch v0 v1) (= (E v0) (E v1)))))))
-(sig bank (fn Dep 1 ampirik) (rel Cr 2 tanim))
+(sig bank (fn Dep 1 empirical) (rel Cr 2 definitional))
 (theory Banking bank (ax crMoney (all (all (imp (Cr v0 v1) (not (= (Dep v0) (Dep v1))))))))
 (morph dep phys bank (fn E (Dep p0)) (rel Exch (Cr p0 p1)))
 (refute depositsMetaphor Physics Banking dep

@@ -1,25 +1,25 @@
 import Lean
 
 /-!
-# Hakem — yargıç (güvenilen araç)
+# Hakem — judge (trusted tool)
 
-Kullanım: `lake env lean --run tools/Judge.lean <comparator.json> <nanoda-çıktısı> <nanoda-çıkış-kodu>`
+Usage: `lake env lean --run tools/Judge.lean <comparator.json> <nanoda-output> <nanoda-exit-code>`
 
-Her iddia için denetlenen şartlar:
-1. `Challenge` ve `Solution` ortamlarında aynı adlı sabit vardır. Türleri (ifadeleri)
-   terim olarak aynıdır. Metin karşılaştırılmaz.
-2. İfadenin anlam tabanı, yani ifadenin dayandığı güvenilen tanımlar (`Hakem.*`,
-   `Challenge`), iki ortamda da tür ve değer olarak aynıdır.
-3. `Solution`'daki ispat yalnızca izinli aksiyomlara dayanır.
-4. Bağımsız çekirdek (nanoda) `Solution` dökümünü hatasız yeniden denetlemiştir.
-   Bu adımı `tools/hakem.sh` çalıştırır ve sonucu buraya iletir.
+Conditions checked for every claim:
+1. `Challenge` and `Solution` contain a constant of the same name whose types (statements)
+   are identical as terms. Text is not compared.
+2. The statement's meaning base, i.e. the trusted definitions it depends on (every module
+   outside Lean's own libraries), is identical in type and value in both environments.
+3. The proof in `Solution` uses only permitted axioms.
+4. The independent kernel (nanoda) re-checked the `Solution` export without error.
+   `tools/hakem.sh` runs this step and passes the result here.
 
-Yalnızca bu dört şart sağlanınca "BİÇİMSEL KABUL" yazılır. Okumalar (docstring)
-rapora "denetlenmedi" etiketiyle kopyalanır.
+Only when all four hold is "FORMALLY ACCEPTED" written. Readings (docstrings) are copied
+into the report marked "unchecked".
 
-Bu araç `.olean` dosyalarını belleğe yükler. Bu yüzden saldırgan girdiye karşı
-kendi başına yeterli değildir. Saldırgan girdi için Linux üzerinde
-`lake comparator --paranoid` kullanılır (bkz. TASARIM.md §6).
+This tool loads `.olean` files into memory, so on its own it is not sufficient against
+adversarial input. For adversarial input use `lake comparator --paranoid` on Linux
+(see DESIGN.md §5); CI runs it on every push.
 -/
 
 open Lean Meta
@@ -29,19 +29,19 @@ def permittedAxioms : List Name := [``propext, ``Quot.sound, ``Classical.choice]
 def moduleOf (env : Environment) (n : Name) : Option Name :=
   (env.getModuleIdxFor? n).map fun idx => env.header.moduleNames[idx.toNat]!
 
-/-- Lean'in kendi kütüphaneleri (bütün taraflarca paylaşılan önsöz). -/
+/-- Lean's own libraries (the prelude shared by all parties). -/
 def coreRoots : List Name := [`Init, `Std, `Lean, `Lake]
 
-/-- İfadenin anlam tabanına giren sabit: önsöz dışındaki her modülde tanımlı sabit.
-(Önceki sürüm yalnızca `Hakem`/`Challenge` köklerini sayıyordu; `Corpus` gibi yeni
-güvenilen modüller anlam tabanından kaçıyordu. Öz-sınama `SelfTest.Swap` bunu yakaladı.) -/
+/-- A constant enters a statement's meaning base if it is defined in any module outside the
+prelude. (An earlier version counted only the `Hakem`/`Challenge` roots, so new trusted
+modules such as the corpus trees escaped the meaning base. Self-test `SelfTest.Swap` caught it.) -/
 def isTrusted (env : Environment) (n : Name) : Bool :=
   match moduleOf env n with
   | some m => !coreRoots.contains m.getRoot
   | none   => false
 
-/-- Bir sabitin türünde ve değerinde (teoremlerde ispatta) geçen sabitler.
-Dikkat: `ConstantInfo.value?` teoremler için `none` döner; bu yüzden açıkça eşlenir. -/
+/-- Constants occurring in a constant's type and value (for theorems, in the proof).
+Note: `ConstantInfo.value?` returns `none` for theorems, so values are matched explicitly. -/
 def valueOf : ConstantInfo → Option Expr
   | .defnInfo d   => some d.value
   | .thmInfo t    => some t.value
@@ -58,7 +58,7 @@ def constsOf (ci : ConstantInfo) : Array Name :=
     | _             => #[]
   ci.type.getUsedConstants ++ fromVal ++ extra
 
-/-- Güvenilen modüllerde tanımlı olup ifadenin (geçişli olarak) dayandığı sabitler. -/
+/-- Constants defined in trusted modules that the statement (transitively) depends on. -/
 partial def meaningBase (env : Environment) (roots : Array Name) : Array Name := Id.run do
   let mut seen : NameSet := {}
   let mut out : Array Name := #[]
@@ -73,7 +73,7 @@ partial def meaningBase (env : Environment) (roots : Array Name) : Array Name :=
       todo := (constsOf ci).toList ++ todo
   return out
 
-/-- Bir sabitin geçişli olarak dayandığı aksiyomlar. -/
+/-- Axioms a constant transitively depends on. -/
 partial def axiomsOf (env : Environment) (n : Name) : Array Name := Id.run do
   let mut seen : NameSet := {}
   let mut axs : Array Name := #[]
@@ -86,7 +86,7 @@ partial def axiomsOf (env : Environment) (n : Name) : Array Name := Id.run do
     match env.find? c with
     | some (.axiomInfo _) => axs := axs.push c
     | some ci => todo := (constsOf ci).toList ++ todo
-    | none => axs := axs.push (c ++ `«BULUNAMADI»)
+    | none => axs := axs.push (c ++ `«NOT_FOUND»)
   return axs
 
 def sameDecl (a b : ConstantInfo) (compareValue : Bool) : Bool :=
@@ -102,7 +102,7 @@ def ppIn (env : Environment) (e : Expr) : IO String := do
 def firstLine (s : String) : String :=
   (s.splitOn "\n").head!.trimAscii.toString
 
-/-- nanoda çıktısında `theorem <ad> ...` bloğunu bul. -/
+/-- Find the `theorem <name> ...` block in nanoda's output. -/
 def nanodaBlock (out : String) (n : Name) : Option String :=
   (out.splitOn "\n\n").find? fun b => b.startsWith s!"theorem {n} "
 
@@ -118,17 +118,17 @@ structure Row where
 
 def judge (chal sol : Environment) (nanodaOut : String) (nanodaOk : Bool) (n : Name) : IO Row := do
   let mut reasons := #[]
-  let some cc := chal.find? n | return ⟨n, false, #["Challenge'da yok"], "", #[], #[], "", none⟩
+  let some cc := chal.find? n | return ⟨n, false, #["missing in Challenge"], "", #[], #[], "", none⟩
   let stmt ← ppIn chal cc.type
-  let reading := (((← findDocString? chal n).getD "(okuma yok)").trimAscii.toString).replace "OKUMA: " ""
+  let reading := (((← findDocString? chal n).getD "(no reading)").trimAscii.toString).replace "READING: " ""
   let base := meaningBase chal (cc.type.getUsedConstants)
   let mut baseDocs := #[]
   for b in base do
     let d := (← findDocString? chal b).getD ""
-    -- Parmak izi: tanımın türü ve değeri üzerinden yapısal özet. İnsan incelemeleri
-    -- bu değere bağlanır; tanım değişirse inceleme geçersiz olur.
-    -- shortcut: 64-bit yapısal özet, kriptografik değil; bağımsız incelemeler için
-    -- dökümdeki (ndjson) bildirimin SHA-256 özetine geçilmeli.
+    -- Fingerprint: a structural digest of the definition's type and value. Human reviews
+    -- are pinned to it; if the definition changes, the review is void.
+    -- shortcut: 64-bit structural digest, not cryptographic; for independent reviews,
+    -- switch to the SHA-256 of the declaration in the (ndjson) export.
     let fp := match chal.find? b with
       | some ci =>
         let ctorHash := match ci with
@@ -142,49 +142,49 @@ def judge (chal sol : Environment) (nanodaOut : String) (nanodaOk : Bool) (n : N
     if !b.isInternal then baseDocs := baseDocs.push (b, s!"[{fp}] {firstLine d}")
   let mut axs := #[]
   match sol.find? n with
-  | none => reasons := reasons.push "Solution'da yok"
+  | none => reasons := reasons.push "missing in Solution"
   | some sc =>
-    if !(sameDecl cc sc false) then reasons := reasons.push "İFADE FARKLI (Challenge ≠ Solution)"
-    if !sc.isTheorem then reasons := reasons.push "Solution'da teorem değil"
+    if !(sameDecl cc sc false) then reasons := reasons.push "STATEMENT DIFFERS (Challenge ≠ Solution)"
+    if !sc.isTheorem then reasons := reasons.push "not a theorem in Solution"
     for b in base do
       match chal.find? b, sol.find? b with
       | some x, some y =>
-        if !(sameDecl x y true) then reasons := reasons.push s!"anlam tabanı farklı: {b}"
-      | _, _ => reasons := reasons.push s!"anlam tabanı eksik: {b}"
+        if !(sameDecl x y true) then reasons := reasons.push s!"meaning base differs: {b}"
+      | _, _ => reasons := reasons.push s!"meaning base missing: {b}"
     axs := axiomsOf sol n
     for a in axs do
-      if !permittedAxioms.contains a then reasons := reasons.push s!"izinsiz aksiyom: {a}"
+      if !permittedAxioms.contains a then reasons := reasons.push s!"unpermitted axiom: {a}"
   let nb := nanodaBlock nanodaOut n
-  if !nanodaOk then reasons := reasons.push "bağımsız çekirdek (nanoda) dökümü reddetti"
-  if nb.isNone then reasons := reasons.push "nanoda bu iddiayı basmadı"
+  if !nanodaOk then reasons := reasons.push "independent kernel (nanoda) rejected the export"
+  if nb.isNone then reasons := reasons.push "nanoda did not print this claim"
   return ⟨n, reasons.isEmpty, reasons, stmt, axs, baseDocs, reading, nb⟩
 
 def render (rows : Array Row) (nanodaOk : Bool) : String := Id.run do
   let okCount := (rows.filter (·.ok)).size
-  let mut s := "# KARAR\n\n"
-  s := s ++ "Bu dosya `tools/hakem.sh` tarafından üretilir. Elle düzenlenmez.\n\n"
-  s := s ++ s!"**{okCount} / {rows.size} iddia biçimsel kabul aldı.**\n\n"
-  s := s ++ "## Bu kararın anlamı\n\n"
-  s := s ++ "\"BİÇİMSEL KABUL\" yalnızca şunu söyler:\n\n"
-  s := s ++ "1. Aşağıda basılan Lean ifadesi Lean çekirdeğince kabul edildi (`lake build`).\n"
-  s := s ++ s!"2. İfade bağımsız bir çekirdekte (nanoda, Rust) yeniden denetlendi: {if nanodaOk then "geçti" else "GEÇMEDİ"}.\n"
-  s := s ++ "3. İfade, güvenilen `Challenge.lean`'deki ifadeyle terim düzeyinde aynıdır.\n"
-  s := s ++ "4. İfadenin dayandığı tanımlar (anlam tabanı) iki tarafta aynıdır.\n"
-  s := s ++ "5. İspat yalnızca `propext`, `Quot.sound`, `Classical.choice` aksiyomlarına dayanır.\n\n"
-  s := s ++ "Bu karar şunları **söylemez**:\n\n"
-  s := s ++ "- OKUMA satırının ifadeyi doğru anlattığını. Okuma insan incelemesine açıktır.\n"
-  s := s ++ "- Anlam tabanındaki tanımların gerçek disiplini doğru temsil ettiğini. İDEALLEŞTİRME notlarına bakınız.\n"
-  s := s ++ "- Ampirik değerlerin doğru olduğunu. Değer seçimlerinin doğru olduğunu.\n"
-  s := s ++ "- Saldırgan girdiye karşı tam güvenceyi. Bu yerel çalıştırma sandbox kullanmaz. Tam güvence için Linux'ta `lake comparator --paranoid` (5 çekirdek) gerekir.\n\n"
+  let mut s := "# VERDICT\n\n"
+  s := s ++ "Generated by `tools/hakem.sh`. Do not edit by hand.\n\n"
+  s := s ++ s!"**{okCount} / {rows.size} claims formally accepted.**\n\n"
+  s := s ++ "## What this verdict means\n\n"
+  s := s ++ "\"FORMALLY ACCEPTED\" says only this:\n\n"
+  s := s ++ "1. The Lean statement printed below was accepted by Lean's kernel (`lake build`).\n"
+  s := s ++ s!"2. It was re-checked by an independent kernel (nanoda, Rust): {if nanodaOk then "passed" else "FAILED"}.\n"
+  s := s ++ "3. The statement is identical, as a term, to the one in the trusted `Challenge.lean`.\n"
+  s := s ++ "4. The definitions it depends on (its meaning base) are identical on both sides.\n"
+  s := s ++ "5. The proof uses only the axioms `propext`, `Quot.sound`, `Classical.choice`.\n\n"
+  s := s ++ "This verdict does **not** say:\n\n"
+  s := s ++ "- That the READING line describes the statement correctly. Readings are open to human review.\n"
+  s := s ++ "- That the definitions in the meaning base faithfully represent the real discipline.\n"
+  s := s ++ "- That empirical values or value choices are right.\n"
+  s := s ++ "- Full protection against adversarial input. This local run uses no sandbox; CI runs `lake comparator --paranoid` (sandbox, six kernels) on every push.\n\n"
   for r in rows do
     s := s ++ s!"---\n\n## `{r.name}`\n\n"
-    s := s ++ (if r.ok then "**DURUM: BİÇİMSEL KABUL**\n\n" else s!"**DURUM: RET**: {", ".intercalate r.reasons.toList}\n\n")
-    s := s ++ s!"**İfade** (güvenilen ortamda basıldı):\n\n```lean\n{r.stmt}\n```\n\n"
+    s := s ++ (if r.ok then "**STATUS: FORMALLY ACCEPTED**\n\n" else s!"**STATUS: REJECTED**: {", ".intercalate r.reasons.toList}\n\n")
+    s := s ++ s!"**Statement** (printed in the trusted environment):\n\n```lean\n{r.stmt}\n```\n\n"
     if let some nb := r.nanoda then
-      s := s ++ s!"**İfade** (bağımsız çekirdeğin yazıcısıyla, gösterimsiz):\n\n```lean\n{nb}\n```\n\n"
+      s := s ++ s!"**Statement** (printed by the independent kernel, without notation):\n\n```lean\n{nb}\n```\n\n"
     s := s ++ s!"**Aksiyomlar:** {", ".intercalate (r.axioms.toList.map toString)}\n\n"
-    s := s ++ s!"**OKUMA (denetlenmedi):** {r.reading}\n\n"
-    s := s ++ "**Anlam tabanı** (insanlarca okunması gereken tanımlar; [parmak izi]):\n\n"
+    s := s ++ s!"**READING (unchecked):** {r.reading}\n\n"
+    s := s ++ "**Meaning base** (definitions humans should read; [fingerprint]):\n\n"
     for (b, d) in r.base do
       s := s ++ s!"- `{b}`: {d}\n"
     s := s ++ "\n"
@@ -192,7 +192,7 @@ def render (rows : Array Row) (nanodaOk : Bool) : String := Id.run do
 
 unsafe def main (args : List String) : IO UInt32 := do
   let [cfgPath, nanodaPath, nanodaCode] := args
-    | IO.eprintln "kullanım: Judge <comparator.json> <nanoda-çıktısı> <nanoda-çıkış-kodu>"; return 2
+    | IO.eprintln "usage: Judge <comparator.json> <nanoda-output> <nanoda-exit-code>"; return 2
   let cfg ← IO.ofExcept (Json.parse (← IO.FS.readFile cfgPath))
   let names ← IO.ofExcept (cfg.getObjValAs? (Array String) "theorem_names")
   let chalMod := (← IO.ofExcept (cfg.getObjValAs? String "challenge_module")).toName
@@ -200,9 +200,9 @@ unsafe def main (args : List String) : IO UInt32 := do
   let nanodaOut ← IO.FS.readFile nanodaPath
   let nanodaOk := nanodaCode.trimAscii.toString == "0"
   initSearchPath (← findSysroot)
-  -- Güvenilmeyen taraf: eklenti durumu ve başlatıcılar yüklenmez (kodu çalıştırılmaz).
+  -- Untrusted side: extension state and initializers are not loaded (its code is not run).
   let sol  ← importModules #[{ module := solMod }] {} (loadExts := false)
-  -- Güvenilen taraf: docstring'ler için eklentiler yüklenir.
+  -- Trusted side: extensions are loaded for docstrings.
   enableInitializersExecution
   let chal ← importModules #[{ module := chalMod }] {} (loadExts := true)
   let mut rows := #[]

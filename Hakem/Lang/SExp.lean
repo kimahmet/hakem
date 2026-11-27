@@ -1,9 +1,9 @@
 /-!
-# Hakem dili — okuyucu
+# Hakem language — reader
 
-Belgeler S-ifadeleridir: atomlar ve parantezli listeler. `;` satır sonuna kadar yorumdur.
-Bu dosya metni ağaca çevirir; anlam içermez. Küçüktür ve bağımsız olarak yeniden
-yazılabilir.
+Documents are S-expressions: atoms and parenthesised lists. `;` starts a comment to end of line.
+This file turns text into a tree; it carries no meaning. It is small and can be
+re-implemented independently.
 -/
 
 inductive SExp where
@@ -22,7 +22,7 @@ def flushTok (buf : List Char) (acc : List Tok) : List Tok :=
 
 def isSpace (c : Char) : Bool := c = ' ' || c = '\n' || c = '\t' || c = '\r'
 
-/-- Karakterlerden simgeler. `buf`: biriken atom (ters), `cmt`: yorum içinde mi. -/
+/-- Characters to tokens. `buf`: the atom being read (reversed); `cmt`: inside a comment. -/
 def tokenizeAux : List Char → List Char → Bool → List Tok → List Tok
   | [],      buf, _,     acc => (flushTok buf acc).reverse
   | c :: cs, buf, true,  acc => tokenizeAux cs buf (c != '\n') acc
@@ -35,7 +35,7 @@ def tokenizeAux : List Char → List Char → Bool → List Tok → List Tok
 
 def tokenize (s : String) : List Tok := tokenizeAux s.toList [] false []
 
-/-- Yığınlı ayrıştırıcı. Yığının her katı, açık bir listenin (ters) öğeleridir. -/
+/-- Stack parser. Each stack level holds the (reversed) elements of an open list. -/
 def parseToks : List Tok → List (List SExp) → Option (List SExp)
   | [],            [acc]               => some acc.reverse
   | [],            _                   => none

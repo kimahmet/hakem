@@ -1,10 +1,10 @@
 (hakem 1)
-; Olgu ve değer: `Ought` normatif bir semboldür.
+; Fact and value: `Ought` is a normative symbol.
 
 (sig pol
-  (fn act 0 ampirik)       ; belirli bir faaliyet
-  (rel Harm 1 ampirik)     ; zarar verir
-  (rel Ought 1 normatif))  ; önlenmelidir
+  (fn act 0 empirical)       ; a particular activity
+  (rel Harm 1 empirical)     ; causes harm
+  (rel Ought 1 normative))  ; ought to be prevented
 
 (theory WithNorm pol
   (ax fact (Harm act))

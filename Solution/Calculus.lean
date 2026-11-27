@@ -1,7 +1,7 @@
 import Hakem
 import Solution.Meta
 
-/-! Güvenilmeyen ispatlar: kalkülüsün sağlamlığı. -/
+/-! Untrusted proofs: soundness of the calculus. -/
 
 namespace Proofs
 
@@ -306,7 +306,7 @@ theorem infer_sound [DecidableEq S.Fn] [DecidableEq S.Rel] (p : Proof S) :
     subst h
     exact Classical.em _
 
-/-- Kalkülüsün sağlamlığı: denetimden geçen ispat, kuramın gerektirdiğini gösterir. -/
+/-- Soundness of the calculus: a proof that passes the check shows what the theory entails. -/
 theorem calculus_sound : ∀ {S : Signature} [DecidableEq S.Fn] [DecidableEq S.Rel]
     (T : Theory S) (φ : Formula S) (p : Proof S), check T.axioms φ p = true → T.Entails φ := by
   intro S _ _ T φ p h M hM env

@@ -1,47 +1,47 @@
 import Hakem.Logic
 
 /-!
-# Hakem — çekirdek sözlük (v2)
+# Hakem — kernel vocabulary
 
-Hükümlerin anlamı burada sabitlenir: kuram, analoji, metafor sertifikası, politika
-hükmü. Hepsi `Hakem.Logic` dilindeki **veri** üzerine tanımlıdır. Disiplin
-sayısına, büyüklüğüne ya da türüne bağlı değildir.
+The meaning of verdicts is fixed here: theory, analogy, metaphor certificate, policy
+verdict. All are defined over **data** in the language of `Hakem.Logic`. They do not
+depend on the number, size or kind of disciplines.
 
-Bu sözlüğün davrandığını gösteren genel yasalar (aktarım, bileşim, metafor,
-Hume yasası) `Challenge.lean`'de iddia olarak yazılıdır. Her olası girdi için bir
-kez çekirdekte ispatlanırlar.
+The general laws showing that this vocabulary behaves (transfer, composition, metaphor,
+Hume's law) are stated as claims in `Challenge.lean`. They are proved once, in the
+kernel, for every possible input.
 -/
 
 variable {S S₁ S₂ : Signature}
 
-/-- Kuram: aksiyomlar ve (isteğe bağlı) kabul edilebilir yapılar sınıfı.
-`admissible`, standart matematik nesnelerine bağlanmak içindir (ör. "taşıyıcı ℕ'dir").
-Bu bir Lean yüklemidir ve anlam tabanına girer. -/
+/-- Theory: axioms and an (optional) class of admissible structures.
+`admissible` connects to standard mathematical objects (e.g. "the carrier is ℕ").
+It is a Lean predicate and is part of the meaning base. -/
 structure Theory (S : Signature) where
   axioms     : List (Formula S)
   admissible : Structure S → Prop := fun _ => True
 
 namespace Theory
 
-/-- `M`, kuramın bir modelidir. -/
+/-- `M` is a model of the theory. -/
 def Models (T : Theory S) (M : Structure S) : Prop :=
   T.admissible M ∧ ∀ φ ∈ T.axioms, M.Sat φ
 
-/-- Kuram `φ`'yi gerektirir: her modeli `φ`'yi doğrular. -/
+/-- The theory entails `φ`: every model satisfies `φ`. -/
 def Entails (T : Theory S) (φ : Formula S) : Prop :=
   ∀ M, T.Models M → M.Sat φ
 
-/-- Alt kuram: ek aksiyomlar. Kısmi analoji, alt kurama kurulan analojidir. -/
+/-- Subtheory: extra axioms. A partial analogy is an analogy into a subtheory. -/
 def extend (T : Theory S) (extra : List (Formula S)) : Theory S where
   axioms     := T.axioms ++ extra
   admissible := T.admissible
 
 end Theory
 
-/-- Analoji sertifikası. `σ`, kaynağın her sembolünün hedefte neye karşılık geldiğini
-söyler. Hedefin her modeli, `σ` ile okunduğunda kaynağın bir modelidir: kaynak
-aksiyomlarının çevirileri hedefte gerekir. Hedefin en az bir modeli gösterilir;
-yoksa aktarım boş yere doğru olurdu. -/
+/-- Analogy certificate. `σ` says what every source symbol corresponds to in the target.
+Every model of the target, read through `σ`, is a model of the source: the target
+entails the translations of the source axioms. At least one model of the target is
+exhibited; otherwise transfer would be vacuously true. -/
 structure Analogy (A : Theory S₁) (B : Theory S₂) where
   σ         : SigMorph S₁ S₂
   adm       : ∀ M, B.Models M → A.admissible (σ.reduct M)
@@ -49,10 +49,10 @@ structure Analogy (A : Theory S₁) (B : Theory S₂) where
   model     : Structure S₂
   model_ok  : B.Models model
 
-/-- Metafor sertifikası. `glossary`, önerilen sözlüktür. `pf`/`pr` sözlüğün bağlayıcı
-kısmını (çapaları) seçer. Kaynak, yalnızca çapalı sembollerle yazılmış bir `φ`
-gerektirir. Hedefin bir modelinde `φ`'nin sözlükteki çevirisi çöker. Bu durumda,
-çapaları bu sözlükle aynı olan hiçbir analoji yoktur. -/
+/-- Metaphor certificate. `glossary` is the proposed glossary. `pf`/`pr` select its binding
+part (the anchors). The source entails a `φ` written only with anchored symbols; in a
+model of the target, the glossary's translation of `φ` fails. Then no analogy whose
+anchors agree with this glossary exists. -/
 structure Refutation (A : Theory S₁) (B : Theory S₂)
     (pf : S₁.Fn → Bool) (pr : S₁.Rel → Bool) (glossary : SigMorph S₁ S₂) where
   φ      : Formula S₁
@@ -62,19 +62,19 @@ structure Refutation (A : Theory S₁) (B : Theory S₂)
   cex_ok : B.Models cex
   fails  : ¬ cex.Sat (glossary.trF φ)
 
-/-- Yalnızca normatif sembollerin yorumunu değiştir. Taşıyıcı, betimsel (tanım ve
-ampirik) semboller olduğu gibi kalır. -/
+/-- Change the interpretations of normative symbols only. The carrier and descriptive
+(definitional and empirical) symbols stay as they are. -/
 def Structure.reinterp (M : Structure S)
     (g : (f : S.Fn) → (Fin (S.fnArity f) → M.D) → M.D)
     (h : (r : S.Rel) → (Fin (S.relArity r) → M.D) → Prop) : Structure S where
   D    := M.D
   dflt := M.dflt
-  fn   := fun f => if S.fnRole f = .normatif then g f else M.fn f
-  rel  := fun r => if S.relRole r = .normatif then h r else M.rel r
+  fn   := fun f => if S.fnRole f = .normative then g f else M.fn f
+  rel  := fun r => if S.relRole r = .normative then h r else M.rel r
 
-/-- Politika hükmü: `T ⊨ φ`. Ayrıca kuramın bütün öncüllerini sağlayan bir dünya ve
-o dünyada **yalnızca normatif sembollerin** yeniden yorumlanmasıyla `φ`'nin çöktüğü
-bir alternatif gösterilir. Olgular sabitken sonucu değer seçimi belirler. -/
+/-- Policy verdict: `T ⊨ φ`, together with a world satisfying all premises of the theory
+and an alternative, obtained by reinterpreting **only the normative symbols** of that
+world, in which `φ` fails. With the facts fixed, the value choice decides the outcome. -/
 structure PolicyVerdict (T : Theory S) (φ : Formula S) where
   entails  : T.Entails φ
   world    : Structure S
@@ -84,9 +84,9 @@ structure PolicyVerdict (T : Theory S) (φ : Formula S) where
   alt_adm  : T.admissible (world.reinterp g h)
   fails    : ¬ (world.reinterp g h).Sat φ
 
-/-! ## Arka plan: standart matematik nesneleri -/
+/-! ## Background: standard mathematical objects -/
 
-/-- İki yapı arasında izomorfizma: ters çevrilebilir, bütün yorumları koruyan eşleme. -/
+/-- Isomorphism of structures: an invertible map preserving all interpretations. -/
 structure Structure.Iso (M N : Structure S) where
   to    : M.D → N.D
   inv   : N.D → M.D
@@ -96,9 +96,9 @@ structure Structure.Iso (M N : Structure S) where
   fn    : ∀ f v, to (M.fn f v) = N.fn f (fun i => to (v i))
   rel   : ∀ r v, M.rel r v ↔ N.rel r (fun i => to (v i))
 
-/-- Arka planlı kuram. `ι` standart sözlüğü (ör. ℕ'nin sayıları, sırası, fonksiyonları)
-disiplin sözlüğüne gömer. Kabul edilebilir yapılar, standart kısmı `B`'ye izomorf
-olanlardır. Böylece "sayı" gerçekten sayıdır. -/
+/-- Theory with background. `ι` embeds a standard vocabulary (e.g. the numbers, order and
+functions of ℕ) into the discipline's vocabulary. Admissible structures are those whose
+standard part is isomorphic to `B`, so that "number" really means number. -/
 def Theory.withBackground {S₀ : Signature} (axioms : List (Formula S)) (ι : SigMorph S₀ S)
     (B : Structure S₀) : Theory S where
   axioms     := axioms

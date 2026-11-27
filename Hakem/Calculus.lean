@@ -1,21 +1,21 @@
 import Hakem.Kernel
 
 /-!
-# Hakem — ispat kalkülüsü (v2)
+# Hakem — proof calculus
 
-İspatlar da veridir. `Proof`, birinci mertebe doğal çıkarımın (eşitlik ve dışlanan
-orta ile) ispat terimidir. `infer`, bir ispatın bağlamdan hangi önermeyi çıkardığını
-hesaplar. `check` bunu hedefle karşılaştırır.
+Proofs are data too. `Proof` is the proof-term language of first-order natural deduction
+(with equality and excluded middle). `infer` computes which formula a proof derives from
+its context. `check` compares it with the goal.
 
-Kalkülüs güven gerektirmez. Sağlamlığı (`calculus_sound`, `Challenge.lean`) bir kez
-ispatlanır. O ispattan sonra `check T.axioms φ p = true` hesabı, `T.Entails φ` için
-yeterlidir. Bu hesabı Lean çekirdeği yapar (`decide +kernel`); taktik, ayrıştırıcı ya
-da derleyici devreye girmez.
+The calculus needs no trust. Its soundness (`calculus_sound`, `Challenge.lean`) is proved
+once. After that, the computation `check T.axioms φ p = true` suffices for `T.Entails φ`.
+The Lean kernel performs the computation (`decide +kernel`); no tactic, parser or
+compiler is involved.
 -/
 
 variable {S : Signature}
 
-/-! ## Sözdizimsel eşitlik -/
+/-! ## Syntactic equality -/
 
 def Term.beq [DecidableEq S.Fn] (t u : Term S) : Bool :=
   match t, u with
@@ -42,52 +42,52 @@ def Formula.beq [DecidableEq S.Fn] [DecidableEq S.Rel] (φ ψ : Formula S) : Boo
   | _, _ => false
 termination_by structural φ
 
-/-! ## Bağlam işlemleri -/
+/-! ## Context operations -/
 
-/-- Serbest değişkenleri bir artır (bağlayıcıya girerken bağlam için). -/
+/-- Increment free variables (for the context when going under a binder). -/
 def Formula.shift (φ : Formula S) : Formula S := φ.subst (fun n => .var (n + 1))
 
-/-- Değişken 0'a `t` koy, ötekileri bir azalt. -/
+/-- Put `t` at variable 0 and decrement the others. -/
 def instSubst (t : Term S) : Nat → Term S
   | 0     => t
   | n + 1 => .var n
 
-/-! ## İspat terimleri -/
+/-! ## Proof terms -/
 
 inductive Proof (S : Signature) where
-  /-- Bağlamdaki `i`. önerme. -/
+  /-- The `i`-th formula of the context. -/
   | hyp     : Nat → Proof S
   /-- `⊥ ⊢ φ`. -/
   | falsumE : Formula S → Proof S → Proof S
-  /-- `φ, Γ ⊢ ψ` ise `Γ ⊢ φ → ψ`. -/
+  /-- From `φ, Γ ⊢ ψ` infer `Γ ⊢ φ → ψ`. -/
   | impI    : Formula S → Proof S → Proof S
-  /-- `φ → ψ` ve `φ` ise `ψ`. -/
+  /-- From `φ → ψ` and `φ` infer `ψ`. -/
   | impE    : Proof S → Proof S → Proof S
   | andI    : Proof S → Proof S → Proof S
   | andE1   : Proof S → Proof S
   | andE2   : Proof S → Proof S
-  /-- `φ` ise `φ ∨ ψ`. -/
+  /-- From `φ` infer `φ ∨ ψ`. -/
   | orI1    : Formula S → Proof S → Proof S
-  /-- `ψ` ise `φ ∨ ψ`. -/
+  /-- From `ψ` infer `φ ∨ ψ`. -/
   | orI2    : Formula S → Proof S → Proof S
-  /-- `φ ∨ ψ`, `φ, Γ ⊢ χ`, `ψ, Γ ⊢ χ` ise `χ`. -/
+  /-- From `φ ∨ ψ`, `φ, Γ ⊢ χ` and `ψ, Γ ⊢ χ` infer `χ`. -/
   | orE     : Proof S → Proof S → Proof S → Proof S
-  /-- `↑Γ ⊢ φ` ise `Γ ⊢ ∀ φ`. -/
+  /-- From `↑Γ ⊢ φ` infer `Γ ⊢ ∀ φ`. -/
   | allI    : Proof S → Proof S
-  /-- `∀ φ` ise `φ[t]`. -/
+  /-- From `∀ φ` infer `φ[t]`. -/
   | allE    : Term S → Proof S → Proof S
-  /-- `φ[t]` ise `∃ φ`. -/
+  /-- From `φ[t]` infer `∃ φ`. -/
   | exI     : Formula S → Term S → Proof S → Proof S
-  /-- `∃ φ` ve `φ, ↑Γ ⊢ ↑χ` ise `χ`. -/
+  /-- From `∃ φ` and `φ, ↑Γ ⊢ ↑χ` infer `χ`. -/
   | exE     : Formula S → Proof S → Proof S → Proof S
   /-- `t = t`. -/
   | refl    : Term S → Proof S
-  /-- `t = u` ve `φ[t]` ise `φ[u]`. -/
+  /-- From `t = u` and `φ[t]` infer `φ[u]`. -/
   | eqE     : Formula S → Proof S → Proof S → Proof S
   /-- `φ ∨ ¬ φ`. -/
   | em      : Formula S → Proof S
 
-/-- İspatın bağlamdan çıkardığı önerme (geçersizse `none`). -/
+/-- The formula a proof derives from the context (`none` if invalid). -/
 def infer [DecidableEq S.Fn] [DecidableEq S.Rel] : List (Formula S) → Proof S → Option (Formula S)
   | Γ, .hyp i => Γ[i]?
   | Γ, .falsumE φ p => match infer Γ p with
@@ -132,7 +132,7 @@ def infer [DecidableEq S.Fn] [DecidableEq S.Rel] : List (Formula S) → Proof S 
     | _, _ => none
   | _, .em φ => some (.or φ φ.not)
 
-/-- `p`, `Γ` bağlamında `φ`'nin ispatıdır. -/
+/-- `p` is a proof of `φ` in context `Γ`. -/
 def check [DecidableEq S.Fn] [DecidableEq S.Rel] (Γ : List (Formula S)) (φ : Formula S)
     (p : Proof S) : Bool :=
   match infer Γ p with

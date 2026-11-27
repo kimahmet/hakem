@@ -2,11 +2,11 @@ import Hakem
 import Solution.Calculus
 import Solution.Finite
 
-/-! Güvenilmeyen ispatlar: Hakem dili denetleyicisinin sağlamlığı. -/
+/-! Untrusted proofs: soundness of the Hakem language checker. -/
 
 namespace Proofs
 
-/-! ## Kesme: önceki lemmalar hipotez olarak -/
+/-! ## Cut: earlier lemmas as hypotheses -/
 
 theorem calculus_sound_extra {S : Signature} [DecidableEq S.Fn] [DecidableEq S.Rel]
     (T : Theory S) (extra : List (Formula S)) (hex : ∀ ψ ∈ extra, T.Entails ψ)
@@ -23,7 +23,7 @@ theorem calculus_sound_extra {S : Signature} [DecidableEq S.Fn] [DecidableEq S.R
     · exact hex χ hl M hM env
   · simp at h
 
-/-- Kuram iyi: bütün lemmaları aksiyomlarından çıkar. -/
+/-- A good theory: all its lemmas follow from its axioms. -/
 def _root_.Thy.Good (t : Thy) : Prop := ∀ ψ ∈ t.lems, t.theory.Entails ψ
 
 theorem checkIn_sound (t : Thy) (ht : t.Good) (φ : Formula (mkSig t.decls)) (p : RProof)
@@ -42,7 +42,7 @@ theorem checkModel_sound (t : Thy) (m : RModel) (h : checkModel t m = true) :
     exact ⟨M, finite_models_sound M t.theory trivial h⟩
   · simp at h
 
-/-! ## Çapalar: bir formül yalnızca andığı sembolleri kullanır -/
+/-! ## Anchors: a formula only uses the symbols it mentions -/
 
 theorem Term.onlySyms_of_mentions {S : Signature} [DecidableEq S.Fn] (P : S.Fn → Bool) (t : Term S) :
     (∀ f, t.mentionsFn f = true → P f = true) → t.onlySyms P = true := by
@@ -96,7 +96,7 @@ theorem Formula.onlySyms_of_mentions {S : Signature} [DecidableEq S.Fn] [Decidab
     intro HP HQ
     exact ih (fun f hf => HP f hf) (fun r hr => HQ r hr)
 
-/-! ## Tek iddia -/
+/-! ## A single claim -/
 
 theorem zip_cover {α β : Type} : ∀ (l1 : List α) (l2 : List β), l1.length = l2.length →
     ∀ x ∈ l1, ∃ y, (x, y) ∈ l1.zip l2
@@ -155,7 +155,7 @@ theorem verdict_sound (n : String) (t : Thy) (ht : t.Good) (φ : Formula (mkSig 
                rwa [reinterpB_toStructure] at this }⟩
   · simp at hm
 
-/-! ## Belge -/
+/-! ## Documents -/
 
 def _root_.Env.Good (env : Env) : Prop := ∀ t ∈ env.thys, t.Good
 
@@ -304,7 +304,7 @@ theorem elabEntries_sound : ∀ (es : List REntry) (env : Env) (cs : List Claim)
     · exact h1 c h
     · exact h2 c h
 
-/-- **Dilin sağlamlığı (ağaç)**: denetimden geçen her belge ağacının bütün iddiaları doğrudur. -/
+/-- **Soundness of the language (tree)**: every claim of an accepted document tree holds. -/
 theorem checkTree_sound : ∀ es : List SExp, checkTree es = true → Doc.HoldsTree es := by
   intro es h
   unfold checkTree at h
@@ -318,7 +318,7 @@ theorem checkTree_sound : ∀ es : List SExp, checkTree es = true → Doc.HoldsT
       (fun c hc => List.all_eq_true.1 h c hc)
   · simp at h
 
-/-- **Dilin sağlamlığı (metin)**: denetimden geçen her belgenin bütün iddiaları doğrudur. -/
+/-- **Soundness of the language (text)**: every claim of an accepted document holds. -/
 theorem checkDoc_sound : ∀ s : String, checkDoc s = true → Doc.Holds s := by
   intro s h
   unfold checkDoc at h

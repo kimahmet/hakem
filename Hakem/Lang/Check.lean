@@ -1,20 +1,20 @@
 import Hakem.Lang.Elab
 
 /-!
-# Hakem dili — denetleyici
+# Hakem language — checker
 
-`checkDoc s = true` ise `Doc.Holds s` (sağlamlık: `checkDoc_sound`, `Challenge.lean`).
-Denetleyici güven gerektirmez: sağlamlığı bir kez ispatlanır. Derlenmiş kodla hızlı
-çalıştırılabilir (`lake exe hakem`) ya da çekirdekte hesaplanabilir (`decide +kernel`).
+If `checkDoc s = true` then `Doc.Holds s` (soundness: `checkDoc_sound`, `Challenge.lean`).
+The checker needs no trust: its soundness is proved once. It runs fast as compiled code
+(`lake exe hakem`) or can be computed in the kernel (`decide +kernel`).
 -/
 
-/-- Adın listedeki konumu. -/
+/-- Position of a name in a list. -/
 def idxOfStr (n : String) : List String → Option Nat
   | [] => none
   | x :: xs => if x = n then some 0 else (idxOfStr n xs).map (· + 1)
 
-/-- İspat çevirisi. `names`: kuramın aksiyom ve lemma adları (bağlamın küresel kısmı).
-`dp`: bağlayıcı derinliği; `nl`: yerel hipotez sayısı. -/
+/-- Proof elaboration. `names`: the theory's axiom and lemma names (global part of the context).
+`dp`: binder depth; `nl`: number of local hypotheses. -/
 def elabProof (d : Decls) (names : List String) : Nat → Nat → RProof → Option (Proof (mkSig d))
   | _,  _,  .hyp n => some (.hyp n)
   | _,  nl, .ax a => (idxOfStr a names).map (fun i => .hyp (nl + i))
@@ -41,7 +41,7 @@ def elabProof (d : Decls) (names : List String) : Nat → Nat → RProof → Opt
     pure (.eqE (← elabForm d (dp + 1) 0 a) (← elabProof d names dp nl p) (← elabProof d names dp nl q))
   | dp, _,  .em a => do pure (.em (← elabForm d dp 0 a))
 
-/-- Argüman vektörünün tablodaki konumu: `a0 + B·a1 + B²·a2 + …`. -/
+/-- Position of an argument vector in a table: `a0 + B·a1 + B²·a2 + …`. -/
 def encodeIdx : (k : Nat) → (Fin k → Nat) → Nat → Nat
   | 0,     _, _ => 0
   | k + 1, v, b => v 0 + b * encodeIdx k (fun i => v i.succ) b
@@ -60,7 +60,7 @@ def elabModel (d : Decls) (m : RModel) : Option (FinStructure (mkSig d)) :=
       fn := fun i v => tableFn n ((assoc (d.1.get i).name m.fns).getD []) v
       rel := fun r v => tableRel n ((assoc (d.2.get r).name m.rels).getD []) v }
 
-/-- Alternatif dünyanın tabloları (yalnızca normatif semboller kullanılır). -/
+/-- Tables of the alternative world (only normative symbols are used). -/
 def altFn (d : Decls) (W : FinStructure (mkSig d)) (alt : RModel) :
     (f : Fin d.1.length) → (Fin ((mkSig d).fnArity f) → Fin (W.n + 1)) → Fin (W.n + 1) :=
   fun f v => match assoc (d.1.get f).name alt.fns with
@@ -73,7 +73,7 @@ def altRel (d : Decls) (W : FinStructure (mkSig d)) (alt : RModel) :
     | some tbl => tableRel W.n tbl v
     | none => W.rel r v
 
-/-- Kuramın bağlamında bir ispatı denetle: aksiyomlar ve önceki lemmalar kullanılabilir. -/
+/-- Check a proof in a theory's context: axioms and earlier lemmas may be used. -/
 def checkIn (t : Thy) (φ : Formula (mkSig t.decls)) (p : RProof) : Bool :=
   match elabProof t.decls (t.axNames ++ t.lemNames) 0 0 p with
   | some p' => check (t.axs ++ t.lems) φ p'
@@ -100,13 +100,13 @@ def checkClaim : Claim → Bool
      | some W => W.checkTheory t.theory && (W.reinterpB (altFn t.decls W alt) (altRel t.decls W alt)).refutes φ
      | none => false)
 
-/-- Belge ağacı denetimi (çekirdekte hesaplanabilir). -/
+/-- Check a document tree (computable in the kernel). -/
 def checkTree (es : List SExp) : Bool :=
   match Doc.claimsTree es with
   | some cs => cs.all checkClaim
   | none => false
 
-/-- Belge metni denetimi. -/
+/-- Check a document text. -/
 def checkDoc (s : String) : Bool :=
   match readSExps s with
   | some es => checkTree es

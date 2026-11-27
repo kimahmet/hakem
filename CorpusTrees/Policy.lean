@@ -1,0 +1,6 @@
+import Hakem.Lang.Check
+import Lean.Data.Json
+
+/-- Tree of `corpus/policy.hkm` (output of the reader). -/
+def policy_tree : List SExp := [(.list [(.atom "hakem"), (.atom "1")]), (.list [(.atom "sig"), (.atom "pol"), (.list [(.atom "fn"), (.atom "act"), (.atom "0"), (.atom "empirical")]), (.list [(.atom "rel"), (.atom "Harm"), (.atom "1"), (.atom "empirical")]), (.list [(.atom "rel"), (.atom "Ought"), (.atom "1"), (.atom "normative")])]), (.list [(.atom "theory"), (.atom "WithNorm"), (.atom "pol"), (.list [(.atom "ax"), (.atom "fact"), (.list [(.atom "Harm"), (.atom "act")])]), (.list [(.atom "ax"), (.atom "norm"), (.list [(.atom "all"), (.list [(.atom "imp"), (.list [(.atom "Harm"), (.atom "v0")]), (.list [(.atom "Ought"), (.atom "v0")])])])])]), (.list [(.atom "verdict"), (.atom "prevent"), (.atom "WithNorm"), (.list [(.atom "Ought"), (.atom "act")]), (.list [(.atom "impE"), (.list [(.atom "allE"), (.atom "act"), (.list [(.atom "ax"), (.atom "norm")])]), (.list [(.atom "ax"), (.atom "fact")])]), (.list [(.atom "model"), (.atom "1"), (.list [(.atom "fn"), (.atom "act"), (.atom "0")]), (.list [(.atom "rel"), (.atom "Harm"), (.atom "1")]), (.list [(.atom "rel"), (.atom "Ought"), (.atom "1")])]), (.list [(.atom "alt"), (.list [(.atom "rel"), (.atom "Ought"), (.atom "0")])])])]
+

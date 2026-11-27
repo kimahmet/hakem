@@ -21,8 +21,8 @@
     "entails_of_std",
     "checkTree_sound",
     "checkDoc_sound",
-    "korunum_holds",
-    "politika_holds"
+    "conservation_holds",
+    "policy_holds"
   ],
   "definition_names": [],
   "permitted_axioms": [

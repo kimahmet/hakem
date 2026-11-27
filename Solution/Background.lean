@@ -1,7 +1,7 @@
 import Hakem
 import Solution.Calculus
 
-/-! Güvenilmeyen ispatlar: izomorfizmle değişmezlik ve arka plan. -/
+/-! Untrusted proofs: invariance under isomorphism, and backgrounds. -/
 
 namespace Proofs
 
@@ -71,7 +71,7 @@ theorem Formula.eval_iso {M N : Structure S} (e : M.Iso N) (φ : Formula S) :
       rw [cons_iso, e.right]
       exact hd'
 
-/-- İzomorf yapılar aynı önermeleri doğrular. -/
+/-- Isomorphic structures satisfy the same formulas. -/
 theorem iso_sat : ∀ {S : Signature} {M N : Structure S}, M.Iso N → ∀ φ : Formula S,
     M.Sat φ ↔ N.Sat φ := by
   intro S M N e φ
@@ -83,16 +83,16 @@ theorem iso_sat : ∀ {S : Signature} {M N : Structure S}, M.Iso N → ∀ φ : 
   · intro h env
     exact (Formula.eval_iso e φ env).2 (h _)
 
-/-- Arka plan sağlamlığı: standart yapıda doğru olan her önerme, kabul edilebilir her
-modelde (çevirisiyle) doğrudur. -/
+/-- Background soundness: every formula true in the standard structure holds (translated)
+in every admissible model. -/
 theorem background_sound : ∀ {S₀ S : Signature} (ι : SigMorph S₀ S) (B : Structure S₀)
     (M : Structure S), Nonempty ((ι.reduct M).Iso B) → ∀ ψ : Formula S₀, B.Sat ψ →
     M.Sat (ι.trF ψ) := by
   intro S₀ S ι B M ⟨e⟩ ψ hB
   exact (satisfaction ι M ψ).2 ((iso_sat e ψ).2 hB)
 
-/-- Arka planlı kalkülüs: ispat, kuramın aksiyomlarına ek olarak standart yapıda doğru
-önermeleri (çevirileriyle) hipotez olarak kullanabilir. -/
+/-- Calculus with background: besides the theory's axioms, a proof may use (translations
+of) formulas true in the standard structure as hypotheses. -/
 theorem calculus_sound_bg : ∀ {S₀ S : Signature} [DecidableEq S.Fn] [DecidableEq S.Rel]
     (T : Theory S) (ι : SigMorph S₀ S) (B : Structure S₀) (bg : List (Formula S₀))
     (φ : Formula S) (p : Proof S),
@@ -112,9 +112,9 @@ theorem calculus_sound_bg : ∀ {S₀ S : Signature} [DecidableEq S.Fn] [Decidab
   · simp at h
 
 
-/-! ## Taşıma: her kabul edilebilir model, standart taşıyıcılı bir modele izomorftur -/
+/-! ## Transport: every admissible model is isomorphic to one on the standard carrier -/
 
-/-- `M`'yi standart taşıyıcıya taşı. -/
+/-- Transport `M` to the standard carrier. -/
 def transport {S₀ : Signature} {ι : SigMorph S₀ S} {B : Structure S₀} (M : Structure S)
     (e : (ι.reduct M).Iso B) : Structure S where
   D    := B.D
@@ -172,9 +172,9 @@ theorem transport_std_rel {S₀ : Signature} {ι : SigMorph S₀ S} {B : Structu
     h1.symm).trans ((iff_of_eq (congrArg (fun env => (ι.relMap r).eval M env) (inv_argEnv M e v))).trans
       (h3.trans (iff_of_eq (congrArg (B.rel r) h4))))
 
-/-- Standart taşıyıcıda akıl yürütme. Arka planlı bir kuramın gerektirdiğini göstermek
-için, taşıyıcısı standart olan ve standart sembolleri standart yorumlanan modellere
-bakmak yeterlidir. Böylece sıradan Lean matematiği (ör. `omega`) kullanılabilir. -/
+/-- Reasoning on the standard carrier. To show what a theory with background entails, it
+suffices to consider models whose carrier is standard and whose standard symbols are
+interpreted standardly, so ordinary Lean mathematics (e.g. `omega`) can be used. -/
 theorem entails_of_std : ∀ {S₀ S : Signature} (T : Theory S) (ι : SigMorph S₀ S)
     (B : Structure S₀), (∀ M, T.admissible M → Nonempty ((ι.reduct M).Iso B)) →
     ∀ φ : Formula S,

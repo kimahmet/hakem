@@ -1,16 +1,16 @@
-"""Hakem özerk döngüsü: denetimin otomatikleşmesi.
+"""Hakem autonomous loop: automating oversight.
 
-Bir ya da birçok model, aday belgeleri `inbox/` klasörüne yazar. Döngü:
-  1. her adayı `hakem json` ile denetler (insan araya girmez),
-  2. kabul edilenleri içerik özetiyle (SHA-256) `corpus/` klasörüne taşır,
-  3. reddedilenleri gerekçesiyle `rejected/` klasörüne taşır,
-  4. her kararı `ledger.jsonl` defterine ekler (ödül sinyali ve ortak kayıt).
-Kabul edilen belgeler sonra `tools/corpus.py` ile çekirdek sertifikalarına çevrilir.
+One or many models write candidate documents to `inbox/`. The loop
+  1. checks every candidate with `hakem json` (no human in the loop),
+  2. moves accepted ones into `corpus/` under their content hash (SHA-256),
+  3. moves rejected ones into `rejected/`,
+  4. appends every verdict to `ledger.jsonl` (reward signal and shared record).
+Accepted documents are later turned into kernel certificates by `tools/corpus.py`.
 
-Defter, üreten modellerin öğrenmesi için doğrulanabilir ödül sağlar:
-`accepted` = 1, aksi 0; iddia düzeyindeki ayrıntı da kayıtlıdır.
+The ledger gives proposer models a verifiable reward to learn from:
+`accepted` = 1, otherwise 0; claim-level detail is recorded too.
 
-Kullanım: python3 -I tools/loop.py <proje-kökü>
+Usage: python3 -I tools/loop.py <project-root>
 """
 import hashlib, json, pathlib, shutil, subprocess, sys, time
 
@@ -36,4 +36,4 @@ for cand in sorted(inbox.glob("*.hkm")):
              "reward": 1 if ok else 0, "verdict": verdict}
     with ledger.open("a") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    print(f"{'KABUL' if ok else 'RET  '} {target.name}")
+    print(f"{'ACCEPTED' if ok else 'REJECTED'} {target.name}")

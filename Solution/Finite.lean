@@ -1,7 +1,7 @@
 import Hakem
 import Solution.Calculus
 
-/-! Güvenilmeyen ispatlar: sonlu model denetleyicisinin sağlamlığı. -/
+/-! Untrusted proofs: soundness of the finite-model checker. -/
 
 namespace Proofs
 
@@ -135,12 +135,12 @@ theorem closed_sat_iff (M : Structure S) (φ : Formula S) (hc : φ.closed = true
   ⟨fun h => h env, fun h env' =>
     (Formula.eval_agree M φ 0 env env' hc (fun _ hi => absurd hi (Nat.not_lt_zero _))).1 h⟩
 
-/-- Sonlu yapıda, kapalı bir formül için hesap ile doğruluk örtüşür. -/
+/-- In a finite structure, computation agrees with truth for a closed formula. -/
 theorem finite_sat_iff : ∀ {S : Signature} (M : FinStructure S) (φ : Formula S),
     φ.closed = true → (M.toStructure.Sat φ ↔ M.evalB (fun _ => 0) φ = true) :=
   fun M φ hc => (closed_sat_iff M.toStructure φ hc (fun _ => 0)).trans (evalB_iff M φ _).symm
 
-/-- Sonlu model denetimi sağlamdır. -/
+/-- Finite model checking is sound. -/
 theorem finite_models_sound : ∀ {S : Signature} (M : FinStructure S) (T : Theory S),
     T.admissible M.toStructure → M.checkTheory T = true → T.Models M.toStructure := by
   intro S M T hadm h
@@ -149,7 +149,7 @@ theorem finite_models_sound : ∀ {S : Signature} (M : FinStructure S) (T : Theo
   simp only [Bool.and_eq_true] at this
   exact (finite_sat_iff M ψ this.1).2 this.2
 
-/-- Sonlu çürütme sağlamdır. -/
+/-- Finite refutation is sound. -/
 theorem finite_refutes_sound : ∀ {S : Signature} (M : FinStructure S) (φ : Formula S),
     M.refutes φ = true → ¬ M.toStructure.Sat φ := by
   intro S M φ h hs
@@ -163,12 +163,12 @@ theorem reinterpB_toStructure (M : FinStructure S) (g h) :
   unfold FinStructure.reinterpB FinStructure.toStructure Structure.reinterp
   congr 1
   funext r v
-  by_cases hr : S.relRole r = .normatif
+  by_cases hr : S.relRole r = .normative
   · simp [hr]
   · simp [hr]
 
-/-- Veriden politika hükmü: kalkülüs ispatı, öncülleri sağlayan sonlu bir dünya ve
-yalnızca normatif sembolleri değiştirilmiş, sonucu çürüten sonlu bir alternatif. -/
+/-- Policy verdict from data: a calculus proof, a finite world satisfying the premises, and
+a finite alternative, differing only in normative symbols, that refutes the conclusion. -/
 theorem verdict_of_data : ∀ {S : Signature} [DecidableEq S.Fn] [DecidableEq S.Rel]
     (T : Theory S) (φ : Formula S) (p : Proof S) (W : FinStructure S) (g h),
     (∀ M : Structure S, T.admissible M) →
@@ -185,7 +185,7 @@ theorem verdict_of_data : ∀ {S : Signature} [DecidableEq S.Fn] [DecidableEq S.
              have := finite_refutes_sound _ φ hr
              rwa [reinterpB_toStructure] at this }⟩
 
-/-- Veriden metafor sertifikası: kalkülüs ispatı ve sonlu karşı örnek. -/
+/-- Metaphor certificate from data: a calculus proof and a finite counterexample. -/
 theorem refutation_of_data : ∀ {S₁ S₂ : Signature} [DecidableEq S₁.Fn] [DecidableEq S₁.Rel]
     (A : Theory S₁) (B : Theory S₂) (pf : S₁.Fn → Bool) (pr : S₁.Rel → Bool)
     (gl : SigMorph S₁ S₂) (φ : Formula S₁) (p : Proof S₁) (C : FinStructure S₂),

@@ -1,24 +1,24 @@
 (hakem 1)
-; Korunum: fizik ve bankacılık. Bir lemma, onu kullanan bir analoji, bir metafor.
+; Conservation: physics and banking. A lemma, an analogy that uses it, and a metaphor.
 
 (sig phys
-  (fn E 1 ampirik)        ; durumun enerjisi
-  (rel Exch 2 tanim))     ; bir alışveriş adımı
+  (fn E 1 empirical)        ; energy of a state
+  (rel Exch 2 definitional))     ; an exchange step
 (theory Physics phys
   (ax cons (all (all (imp (Exch v0 v1) (= (E v0) (E v1)))))))
 
 (sig bank
-  (fn Dep 1 ampirik)      ; toplam mevduat
-  (fn Net 1 ampirik)      ; mevduat eksi kredi
-  (rel Tr 2 tanim)        ; virman
-  (rel Cr 2 tanim))       ; kredi açma
+  (fn Dep 1 empirical)      ; total deposits
+  (fn Net 1 empirical)      ; deposits minus loans
+  (rel Tr 2 definitional)        ; transfer between accounts
+  (rel Cr 2 definitional))       ; issuing a loan
 (theory Banking bank
   (ax trDep   (all (all (imp (Tr v0 v1) (= (Dep v0) (Dep v1))))))
   (ax trNet   (all (all (imp (Tr v0 v1) (= (Net v0) (Net v1))))))
   (ax crNet   (all (all (imp (Cr v0 v1) (= (Net v0) (Net v1))))))
   (ax crMoney (all (all (imp (Cr v0 v1) (not (= (Dep v0) (Dep v1))))))))
 
-; Her banka adımı net pozisyonu korur.
+; Every banking step preserves the net position.
 (lemma stepNet Banking
   (all (all (imp (or (Tr v0 v1) (Cr v0 v1)) (= (Net v0) (Net v1)))))
   (allI (allI (impI (or (Tr v0 v1) (Cr v0 v1))
@@ -26,7 +26,7 @@
       (impE (allE v1 (allE v0 (ax trNet))) (hyp 0))
       (impE (allE v1 (allE v0 (ax crNet))) (hyp 0)))))))
 
-; Sözlük: enerji = net pozisyon, alışveriş = her banka adımı.
+; Glossary: energy = net position, exchange = any banking step.
 (morph net phys bank
   (fn E (Net p0))
   (rel Exch (or (Tr p0 p1) (Cr p0 p1))))
@@ -35,7 +35,7 @@
   (model 2 (fn Dep 0 1) (fn Net 0 0) (rel Tr 1 0 0 1) (rel Cr 0 0 1 0))
   (oblig cons (ax stepNet)))
 
-; Sözlük: enerji = mevduat. Metafor: kredi mevduatı değiştirir.
+; Glossary: energy = deposits. Metaphor: a loan changes deposits.
 (morph dep phys bank
   (fn E (Dep p0))
   (rel Exch (or (Tr p0 p1) (Cr p0 p1))))

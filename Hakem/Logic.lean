@@ -1,33 +1,33 @@
 /-!
-# Hakem — mantık (v2)
+# Hakem — logic
 
-Disiplinlerin, analojilerin ve argümanların **veri** olarak yazıldığı dil:
-birinci mertebe mantık, eşitlikli, de Bruijn değişkenli.
+The language in which disciplines, analogies and arguments are written as **data**:
+first-order logic with equality and de Bruijn variables.
 
-* Bir disiplinin sözlüğü bir `Signature`'dır. Her sembolün bir **rolü** vardır:
-  `tanim`, `ampirik` ya da `normatif`. Rol öncüle değil sembole aittir. Bir
-  önermenin normatif olup olmadığı içindeki sembollerden hesaplanır
-  (`Formula.descriptive`); beyan edilmez.
-* Bir analoji, bir sözlükten ötekine **sembol eşlemesidir** (`SigMorph`). Her
-  sembol hedef dilde bir terime ya da formüle gider. Eşleme sözlüğün (çapaların)
-  kendisidir.
-* Anlam: `Structure` (taşıyıcı ve yorumlar) ile `Formula.eval`.
+* A discipline's vocabulary is a `Signature`. Every symbol has a **role**:
+  `definitional`, `empirical` or `normative`. The role belongs to the symbol, not to the
+  premise. Whether a formula is normative is computed from its symbols
+  (`Formula.descriptive`); it is never declared.
+* An analogy is a **symbol map** from one vocabulary to another (`SigMorph`). Each
+  symbol goes to a term or formula of the target language. The map is the glossary
+  (the anchors) itself.
+* Meaning: `Structure` (carrier and interpretations) and `Formula.eval`.
 
-Bu dosyada yalnızca tanımlar vardır. Bütün teoremler ayrı ispat dosyalarındadır ve
-güven gerektirmez.
+This file contains only definitions. All theorems live in separate proof files and
+require no trust.
 -/
 
-/-! ## Sözdizimi -/
+/-! ## Syntax -/
 
-/-- Sembol rolü. `tanim`: yapısal/tanımsal sözcük. `ampirik`: değeri ölçümle belirlenir.
-`normatif`: değeri değer seçimiyle belirlenir. -/
+/-- Symbol role. `definitional`: structural vocabulary. `empirical`: value fixed by measurement.
+`normative`: value fixed by a value choice. -/
 inductive Role where
-  | tanim
-  | ampirik
-  | normatif
+  | definitional
+  | empirical
+  | normative
   deriving DecidableEq, Repr
 
-/-- Sözlük: fonksiyon ve bağıntı sembolleri, ikilikleri ve rolleri. -/
+/-- Vocabulary: function and relation symbols, their arities and roles. -/
 structure Signature where
   Fn       : Type
   Rel      : Type
@@ -38,13 +38,13 @@ structure Signature where
 
 variable {S S₁ S₂ S₃ : Signature}
 
-/-- Terim. `var n`: de Bruijn değişkeni. `dflt`: her yapının seçkin öğesi. -/
+/-- Term. `var n`: de Bruijn variable. `dflt`: the distinguished element of every structure. -/
 inductive Term (S : Signature) where
   | var  : Nat → Term S
   | dflt : Term S
   | app  : (f : S.Fn) → (Fin (S.fnArity f) → Term S) → Term S
 
-/-- Formül. `all`/`ex` değişken 0'ı bağlar. -/
+/-- Formula. `all`/`ex` bind variable 0. -/
 inductive Formula (S : Signature) where
   | falsum : Formula S
   | eq     : Term S → Term S → Formula S
@@ -58,18 +58,18 @@ inductive Formula (S : Signature) where
 /-- `¬ φ`. -/
 abbrev Formula.not (φ : Formula S) : Formula S := .imp φ .falsum
 
-/-- Sonlu bir aileye `&&`. -/
+/-- `&&` over a finite family. -/
 def allFin : (k : Nat) → (Fin k → Bool) → Bool
   | 0,     _ => true
   | k + 1, p => p 0 && allFin k (fun i => p i.succ)
 
-/-- Terimdeki her fonksiyon sembolü `pf`'yi sağlar. -/
+/-- Every function symbol of the term satisfies `pf`. -/
 def Term.onlySyms (pf : S.Fn → Bool) : Term S → Bool
   | .var _   => true
   | .dflt    => true
   | .app f a => pf f && allFin _ (fun i => (a i).onlySyms pf)
 
-/-- Formüldeki her sembol `pf`/`pr`'yi sağlar. -/
+/-- Every symbol of the formula satisfies `pf`/`pr`. -/
 def Formula.onlySyms (pf : S.Fn → Bool) (pr : S.Rel → Bool) : Formula S → Bool
   | .falsum  => true
   | .eq t u  => t.onlySyms pf && u.onlySyms pf
@@ -80,9 +80,9 @@ def Formula.onlySyms (pf : S.Fn → Bool) (pr : S.Rel → Bool) : Formula S → 
   | .all φ   => φ.onlySyms pf pr
   | .ex φ    => φ.onlySyms pf pr
 
-/-- Betimsel formül: hiçbir normatif sembol içermez. -/
+/-- Descriptive formula: contains no normative symbol. -/
 def Formula.descriptive (φ : Formula S) : Bool :=
-  φ.onlySyms (fun f => decide (S.fnRole f ≠ .normatif)) (fun r => decide (S.relRole r ≠ .normatif))
+  φ.onlySyms (fun f => decide (S.fnRole f ≠ .normative)) (fun r => decide (S.relRole r ≠ .normative))
 
 /-- Paralel ikame. -/
 def Term.subst (σ : Nat → Term S) : Term S → Term S
@@ -90,10 +90,10 @@ def Term.subst (σ : Nat → Term S) : Term S → Term S
   | .dflt    => .dflt
   | .app f a => .app f (fun i => (a i).subst σ)
 
-/-- Bütün serbest değişkenleri bir artırır. -/
+/-- Increments every free variable. -/
 def Term.shift (t : Term S) : Term S := t.subst (fun n => .var (n + 1))
 
-/-- Bağlayıcının altına geçen ikame. -/
+/-- Substitution moved under a binder. -/
 def liftSubst (σ : Nat → Term S) : Nat → Term S
   | 0     => .var 0
   | n + 1 => (σ n).shift
@@ -110,14 +110,14 @@ def Formula.subst : (Nat → Term S) → Formula S → Formula S
 
 /-! ## Anlam -/
 
-/-- Yapı: taşıyıcı, seçkin öğe, sembol yorumları. -/
+/-- Structure: carrier, distinguished element, symbol interpretations. -/
 structure Structure (S : Signature) where
   D    : Type
   dflt : D
   fn   : (f : S.Fn) → (Fin (S.fnArity f) → D) → D
   rel  : (r : S.Rel) → (Fin (S.relArity r) → D) → Prop
 
-/-- Ortamı bir öğeyle genişlet (değişken 0). -/
+/-- Extend an environment with an element (variable 0). -/
 def cons {α : Type} (d : α) (env : Nat → α) : Nat → α
   | 0     => d
   | n + 1 => env n
@@ -137,19 +137,19 @@ def Formula.eval (M : Structure S) : (Nat → M.D) → Formula S → Prop
   | env, .all φ   => ∀ d, φ.eval M (cons d env)
   | env, .ex φ    => ∃ d, φ.eval M (cons d env)
 
-/-- Yapı formülü doğrular: her ortamda (serbest değişkenler evrensel). -/
+/-- The structure satisfies the formula in every environment (free variables universal). -/
 def Structure.Sat (M : Structure S) (φ : Formula S) : Prop :=
   ∀ env, φ.eval M env
 
-/-! ## Sözlük eşlemesi (analojinin sözdizimi) -/
+/-! ## Glossaries (the syntax of analogy) -/
 
-/-- Sembol eşlemesi. `fnMap f`: hedef dilde bir terim; `var i`, `f`'nin `i`. argümanıdır.
-`relMap r`: hedef dilde bir formül; aynı biçimde. -/
+/-- Symbol map. `fnMap f`: a term of the target language; `var i` is the `i`-th argument of `f`.
+`relMap r`: a formula of the target language, likewise. -/
 structure SigMorph (S₁ S₂ : Signature) where
   fnMap  : (f : S₁.Fn) → Term S₂
   relMap : (r : S₁.Rel) → Formula S₂
 
-/-- Argüman listesini ikameye çevir; ikilik dışı değişkenler `dflt` olur. -/
+/-- Turn an argument vector into a substitution; variables beyond the arity become `dflt`. -/
 def argSubst {k : Nat} (a : Fin k → Term S) : Nat → Term S :=
   fun n => if h : n < k then a ⟨n, h⟩ else .dflt
 
@@ -158,7 +158,7 @@ def SigMorph.trT (σ : SigMorph S₁ S₂) : Term S₁ → Term S₂
   | .dflt    => .dflt
   | .app f a => (σ.fnMap f).subst (argSubst (fun i => σ.trT (a i)))
 
-/-- Bir önermenin hedef dile çevirisi. -/
+/-- Translation of a formula into the target language. -/
 def SigMorph.trF (σ : SigMorph S₁ S₂) : Formula S₁ → Formula S₂
   | .falsum  => .falsum
   | .eq t u  => .eq (σ.trT t) (σ.trT u)
@@ -169,38 +169,38 @@ def SigMorph.trF (σ : SigMorph S₁ S₂) : Formula S₁ → Formula S₂
   | .all φ   => .all (σ.trF φ)
   | .ex φ    => .ex (σ.trF φ)
 
-/-- Eşlemelerin bileşimi: önce `σ`, sonra `τ`. -/
+/-- Composition of glossaries: first `σ`, then `τ`. -/
 def SigMorph.comp (σ : SigMorph S₁ S₂) (τ : SigMorph S₂ S₃) : SigMorph S₁ S₃ where
   fnMap  := fun f => τ.trT (σ.fnMap f)
   relMap := fun r => τ.trF (σ.relMap r)
 
-/-- Argüman vektörünü ortama çevir; ikilik dışı değişkenler seçkin öğe olur. -/
+/-- Turn an argument vector into an environment; variables beyond the arity become the distinguished element. -/
 def argEnv (M : Structure S) {k : Nat} (v : Fin k → M.D) : Nat → M.D :=
   fun n => if h : n < k then v ⟨n, h⟩ else M.dflt
 
-/-- İndirgeme: hedef dünyayı kaynağın diliyle okumak. Taşıyıcı aynı kalır; kaynak
-sembolü, eşlemenin hedefte gösterdiği şey olarak yorumlanır. -/
+/-- Reduct: reading a target world in the source language. The carrier stays the same; a
+source symbol is interpreted as what the glossary points to in the target. -/
 def SigMorph.reduct (σ : SigMorph S₁ S₂) (M : Structure S₂) : Structure S₁ where
   D    := M.D
   dflt := M.dflt
   fn   := fun f v => (σ.fnMap f).eval M (argEnv M v)
   rel  := fun r v => (σ.relMap r).eval M (argEnv M v)
 
-/-- İki eşleme `pf`/`pr`'nin seçtiği sembollerde aynıdır. -/
+/-- Two glossaries agree on the symbols selected by `pf`/`pr`. -/
 def SigMorph.AgreeOn (pf : S₁.Fn → Bool) (pr : S₁.Rel → Bool) (σ τ : SigMorph S₁ S₂) : Prop :=
   (∀ f, pf f = true → σ.fnMap f = τ.fnMap f) ∧ (∀ r, pr r = true → σ.relMap r = τ.relMap r)
 
-/-! ## Veri yazımı için yardımcılar -/
+/-! ## Helpers for writing data -/
 
-/-- Tek argüman. -/
+/-- One argument. -/
 def vec1 {α : Type} (a : α) : Fin 1 → α := fun _ => a
 
-/-- İki argüman: 0. ve 1. -/
+/-- Two arguments: 0th and 1st. -/
 def vec2 {α : Type} (a b : α) : Fin 2 → α := fun i => if i.val = 0 then a else b
 
-/-- Sıfır argüman. -/
+/-- Zero arguments. -/
 def vec0 {α : Type} : Fin 0 → α := fun i => i.elim0
 
-/-- Üç argüman: 0., 1., 2. -/
+/-- Three arguments: 0th, 1st, 2nd. -/
 def vec3 {α : Type} (a b c : α) : Fin 3 → α :=
   fun i => if i.val = 0 then a else if i.val = 1 then b else c

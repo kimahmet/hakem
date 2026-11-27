@@ -2,20 +2,20 @@ import Hakem.Lang.Syntax
 import Hakem.Finite
 
 /-!
-# Hakem dili — anlam
+# Hakem language — meaning
 
-Bir belgenin **anlamı** burada sabitlenir: sözlük bildirimleri çekirdek imzalarına,
-adlar sembollere, formüller çekirdek formüllerine çevrilir; her girdi bir çekirdek
-önermesine (`Claim.Holds`) gider. `Doc.Holds s`: `s` metninin bütün iddiaları doğrudur.
+The **meaning** of a document is fixed here: vocabulary declarations become kernel
+signatures, names become symbols, formulas become kernel formulas, and every entry
+becomes a kernel proposition (`Claim.Holds`). `Doc.Holds s`: every claim of text `s` holds.
 
-İspatlar ve modeller (sertifikalar) anlamı etkilemez; yalnızca denetlenir
+Proofs and models (certificates) do not affect meaning; they are only checked
 (`Hakem.Lang.Check`).
 -/
 
-/-- Bir sözlüğün bildirimleri: fonksiyon ve bağıntı sembolleri. -/
+/-- Declarations of a vocabulary: function and relation symbols. -/
 abbrev Decls := List SymDecl × List SymDecl
 
-/-- Bildirimlerden çekirdek imzası: semboller konumlarıyla adlandırılır. -/
+/-- Kernel signature from declarations: symbols are named by position. -/
 abbrev mkSig (d : Decls) : Signature where
   Fn := Fin d.1.length
   Rel := Fin d.2.length
@@ -24,7 +24,7 @@ abbrev mkSig (d : Decls) : Signature where
   fnRole := fun i => (d.1.get i).role
   relRole := fun i => (d.2.get i).role
 
-/-- Adı `n` olan ilk bildirimin konumu. -/
+/-- Position of the first declaration named `n`. -/
 def findName (n : String) : List SymDecl → Option Nat
   | [] => none
   | s :: ss => if s.name = n then some 0 else (findName n ss).map (· + 1)
@@ -35,14 +35,14 @@ def lookupFn (d : Decls) (n : String) : Option (Fin d.1.length) :=
 def lookupRel (d : Decls) (n : String) : Option (Fin d.2.length) :=
   (findName n d.2).bind fun i => if h : i < d.2.length then some ⟨i, h⟩ else none
 
-/-- Adı `n` olan ilk kaydın değeri. -/
+/-- Value of the first entry named `n`. -/
 def assoc {α : Type} (n : String) : List (String × α) → Option α
   | [] => none
   | (k, v) :: rest => if k = n then some v else assoc n rest
 
-/-! ## Terim ve formül çevirisi
-`depth`: içinde bulunulan bağlayıcı sayısı. `vL` ↦ `var (depth − 1 − L)`.
-`np`: eşlemede parametre sayısı. `pJ` ↦ `var (J + depth)`. -/
+/-! ## Elaborating terms and formulas
+`depth`: number of enclosing binders. `vL` ↦ `var (depth − 1 − L)`.
+`np`: number of parameters in a glossary entry. `pJ` ↦ `var (J + depth)`. -/
 
 mutual
 def elabTerm (d : Decls) (depth np : Nat) : RTerm → Option (Term (mkSig d))
@@ -79,9 +79,9 @@ def elabForm (d : Decls) : Nat → Nat → RForm → Option (Formula (mkSig d))
   | dp, np, .all a => do pure (.all (← elabForm d (dp + 1) np a))
   | dp, np, .ex a => do pure (.ex (← elabForm d (dp + 1) np a))
 
-/-! ## Kuramlar ve eşlemeler -/
+/-! ## Theories and glossaries -/
 
-/-- Belgede tanımlanmış bir kuram. `lems`: belgede daha önce ispatlanmış lemmalar. -/
+/-- A theory defined in the document. `lems`: lemmas proved earlier in the document. -/
 structure Thy where
   name     : String
   sig      : String
@@ -91,7 +91,7 @@ structure Thy where
   lemNames : List String
   lems     : List (Formula (mkSig decls))
 
-/-- Kuramın çekirdek karşılığı: yalnızca aksiyomlar (lemmalar anlamın parçası değildir). -/
+/-- Kernel counterpart of the theory: axioms only (lemmas are not part of the meaning). -/
 def Thy.theory (t : Thy) : Theory (mkSig t.decls) := { axioms := t.axs }
 
 structure RMorph where
@@ -100,7 +100,7 @@ structure RMorph where
   fns  : List (String × RTerm)
   rels : List (String × RForm)
 
-/-- Eşleme: kaynak sözlüğün her sembolü için hedefte bir terim/formül (parametreler `pJ`). -/
+/-- Glossary: a target term/formula for every source symbol (parameters `pJ`). -/
 def elabMorph (d1 d2 : Decls) (m : RMorph) : Option (SigMorph (mkSig d1) (mkSig d2)) := do
   let ts ← d1.1.mapM (fun sd => (assoc sd.name m.fns).bind (elabTerm d2 0 sd.arity))
   let fs ← d1.2.mapM (fun sd => (assoc sd.name m.rels).bind (elabForm d2 0 sd.arity))
@@ -111,7 +111,7 @@ def elabMorph (d1 d2 : Decls) (m : RMorph) : Option (SigMorph (mkSig d1) (mkSig 
     else none
   else none
 
-/-! ## Sembol geçişi (metafor sertifikasının çapaları) -/
+/-! ## Symbol occurrence (the anchors of a metaphor certificate) -/
 
 def Term.mentionsFn {S : Signature} [DecidableEq S.Fn] (f : S.Fn) : Term S → Bool
   | .var _   => false
@@ -138,7 +138,7 @@ def Formula.mentionsRel {S : Signature} [DecidableEq S.Rel] (r : S.Rel) : Formul
   | .all φ   => φ.mentionsRel r
   | .ex φ    => φ.mentionsRel r
 
-/-! ## İddialar ve anlamları -/
+/-! ## Claims and their meaning -/
 
 inductive Claim where
   | lemma   : String → (t : Thy) → Formula (mkSig t.decls) → RProof → Claim
@@ -148,7 +148,7 @@ inductive Claim where
       Formula (mkSig ta.decls) → RProof → RModel → Claim
   | verdict : String → (t : Thy) → Formula (mkSig t.decls) → RProof → RModel → RModel → Claim
 
-/-- Bir iddianın anlamı. Sertifikalar (ispat, model) bu anlama girmez. -/
+/-- The meaning of a claim. Certificates (proofs, models) are not part of it. -/
 def Claim.Holds : Claim → Prop
   | .lemma _ t φ _ => t.theory.Entails φ
   | .analogy _ ta tb σ _ _ => ∃ a : Analogy ta.theory tb.theory, a.σ = σ
@@ -209,14 +209,14 @@ def elabEntries : Env → List REntry → Option (List Claim)
     let cs' ← elabEntries env' es
     pure (cs ++ cs')
 
-/-- Ağacın iddiaları. -/
+/-- The claims of a tree. -/
 def Doc.claimsTree (es : List SExp) : Option (List Claim) :=
   (decodeDoc es).bind (elabEntries ⟨[], [], []⟩)
 
-/-- **Belge ağacının anlamı**: çevrilir ve bütün iddiaları doğrudur. -/
+/-- **Meaning of a document tree**: it elaborates and all its claims hold. -/
 def Doc.HoldsTree (es : List SExp) : Prop :=
   ∃ cs, Doc.claimsTree es = some cs ∧ ∀ c ∈ cs, c.Holds
 
-/-- **Belge metninin anlamı**: okunur ve ağacı doğrudur. -/
+/-- **Meaning of a document text**: it reads into a tree that holds. -/
 def Doc.Holds (s : String) : Prop :=
   ∃ es, readSExps s = some es ∧ Doc.HoldsTree es

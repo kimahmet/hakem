@@ -7,7 +7,7 @@
 **kimahmet** (vision, direction) — implementation developed with the assistance of Claude (Anthropic)
 
 *Draft, November 2026. Every technical claim marked ✓ below refers to a named Lean
-theorem that receives formal acceptance in [`KARAR.md`](../KARAR.md). Read §6 for
+theorem that receives formal acceptance in [`VERDICT.md`](../VERDICT.md). Read §6 for
 exactly what that acceptance means.*
 
 ---
@@ -117,7 +117,7 @@ the corpus. `tools/corpus.py` turns them into kernel certificates.
 ## 3. The logic
 
 Disciplines are data. A **signature** lists function and relation symbols with arities
-and **roles** (`tanim` definitional, `ampirik` empirical, `normatif` normative).
+and **roles** (`definitional`, `empirical`, `normative`).
 Formulas are first-order with equality, using de Bruijn indices. A **structure** gives a
 carrier and interpretations. A **theory** is a list of axioms, optionally with a class of
 admissible structures.
@@ -181,13 +181,13 @@ Once these are accepted, a certificate is checked by kernel computation alone
 
 ## 5. The language
 
-A Hakem document is a list of S-expressions, specified in [`DIL.md`](../DIL.md):
+A Hakem document is a list of S-expressions, specified in [`LANGUAGE.md`](../LANGUAGE.md):
 
 ```lisp
 (hakem 1)
-(sig phys (fn E 1 ampirik) (rel Exch 2 tanim))
+(sig phys (fn E 1 empirical) (rel Exch 2 definitional))
 (theory Physics phys (ax cons (all (all (imp (Exch v0 v1) (= (E v0) (E v1)))))))
-(sig bank (fn Dep 1 ampirik) (fn Net 1 ampirik) (rel Tr 2 tanim) (rel Cr 2 tanim))
+(sig bank (fn Dep 1 empirical) (fn Net 1 empirical) (rel Tr 2 definitional) (rel Cr 2 definitional))
 (theory Banking bank (ax trNet …) (ax crNet …) (ax crMoney …) …)
 (lemma stepNet Banking (all (all (imp (or (Tr v0 v1) (Cr v0 v1)) (= (Net v0) (Net v1))))) PROOF)
 (morph net phys bank (fn E (Net p0)) (rel Exch (or (Tr p0 p1) (Cr p0 p1))))
@@ -208,7 +208,7 @@ compare trees. A finding motivated this split: kernel reduction of `String.toLis
 costs about 0.1 s per character, while checking a document's tree costs about 2 s per
 document.
 
-**Corpus** (✓ `korunum_holds`, ✓ `politika_holds`). Two conformance documents:
+**Corpus** (✓ `conservation_holds`, ✓ `policy_holds`). Two conformance documents:
 * energy conservation transfers to banking under the glossary "energy ↦ net position";
 * the glossary "energy ↦ deposits" is refuted, because credit creates money;
 * a policy verdict whose normative premise is computed as normative.
@@ -292,7 +292,7 @@ We report these because they are the failure mode a referee must anticipate.
 * **Proof search.** The language carries proofs; it does not find them. A search tool
   needs no trust, because its output is checked.
 * **Independent implementations.** A second reader and checker, written by another party
-  against `DIL.md` and the conformance corpus.
+  against `LANGUAGE.md` and the conformance corpus.
 * **Adversarial deployment.** Comparator already runs in CI; next, signed verdicts and
   reproducible builds so that third parties can verify a verdict offline.
 

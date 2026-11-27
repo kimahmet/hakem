@@ -1,12 +1,12 @@
 import Hakem
 
-/-! Güvenilmeyen ispatlar: çekirdeğin genel yasaları. -/
+/-! Untrusted proofs: the general laws of the kernel. -/
 
 namespace Proofs
 
 variable {S S₁ S₂ S₃ : Signature}
 
-/-! ## Yardımcılar -/
+/-! ## Helpers -/
 
 theorem allFin_spec : ∀ {k : Nat} {p : Fin k → Bool}, allFin k p = true → ∀ i, p i = true
   | 0, _, _, i => i.elim0
@@ -15,7 +15,7 @@ theorem allFin_spec : ∀ {k : Nat} {p : Fin k → Bool}, allFin k p = true → 
     exact Fin.cases (motive := fun i => p i = true) h.1
       (fun j => allFin_spec (p := fun i => p i.succ) h.2 j) i
 
-/-! ## İkame -/
+/-! ## Substitution -/
 
 theorem Term.eval_subst (M : Structure S) (σ : Nat → Term S) (env : Nat → M.D) (t : Term S) :
     (t.subst σ).eval M env = t.eval M (fun n => (σ n).eval M env) := by
@@ -88,7 +88,7 @@ theorem Formula.eval_subst (M : Structure S) (φ : Formula S) :
       rw [eval_liftSubst]
       exact hd
 
-/-! ## Tatmin koşulu: çeviri ile indirgeme uyumludur -/
+/-! ## Satisfaction condition: translation agrees with the reduct -/
 
 theorem argSubst_eval (M : Structure S₂) {k : Nat} (a : Fin k → Term S₂) (v : Fin k → M.D)
     (env : Nat → M.D) (h : ∀ i, (a i).eval M env = v i) :
@@ -109,7 +109,7 @@ theorem trT_eval (σ : SigMorph S₁ S₂) (M : Structure S₂) (env : Nat → M
       (σ.fnMap f).eval M (argEnv M fun i => (a i).eval (σ.reduct M) env)
     rw [Term.eval_subst, argSubst_eval M _ _ env ih]
 
-/-- Tatmin koşulu. -/
+/-- Satisfaction condition. -/
 theorem trF_eval (σ : SigMorph S₁ S₂) (M : Structure S₂) (φ : Formula S₁) :
     ∀ env : Nat → M.D, (σ.trF φ).eval M env ↔ φ.eval (σ.reduct M) env := by
   induction φ with
@@ -145,7 +145,7 @@ theorem satisfaction (σ : SigMorph S₁ S₂) (M : Structure S₂) (φ : Formul
     M.Sat (σ.trF φ) ↔ (σ.reduct M).Sat φ :=
   ⟨fun h env => (trF_eval σ M φ env).1 (h env), fun h env => (trF_eval σ M φ env).2 (h env)⟩
 
-/-! ## Aktarım -/
+/-! ## Transfer -/
 
 theorem reduct_models {A : Theory S₁} {B : Theory S₂} (a : Analogy A B) (M : Structure S₂)
     (hM : B.Models M) : A.Models (a.σ.reduct M) :=
@@ -159,7 +159,7 @@ theorem source_consistent {A : Theory S₁} {B : Theory S₂} (a : Analogy A B) 
     ∃ M, A.Models M :=
   ⟨a.σ.reduct a.model, reduct_models a a.model a.model_ok⟩
 
-/-! ## Bileşim -/
+/-! ## Composition -/
 
 theorem reduct_comp (σ : SigMorph S₁ S₂) (τ : SigMorph S₂ S₃) (M : Structure S₃) :
     (σ.comp τ).reduct M = σ.reduct (τ.reduct M) := by
@@ -186,7 +186,7 @@ theorem compose_exists {A : Theory S₁} {B : Theory S₂} {C : Theory S₃}
     (a : Analogy A B) (b : Analogy B C) : ∃ c : Analogy A C, c.σ = a.σ.comp b.σ :=
   ⟨compose a b, rfl⟩
 
-/-! ## Metafor -/
+/-! ## Metaphor -/
 
 theorem trT_congr {pf : S₁.Fn → Bool} {σ τ : SigMorph S₁ S₂}
     (hag : ∀ f, pf f = true → σ.fnMap f = τ.fnMap f) (t : Term S₁) :
@@ -251,10 +251,10 @@ theorem refutation_sound {A : Theory S₁} {B : Theory S₂} {pf : S₁.Fn → B
   rw [trF_congr hag r.φ r.only] at h
   exact r.fails (h r.cex r.cex_ok)
 
-/-! ## Hume yasası -/
+/-! ## Hume's law -/
 
 theorem Term.eval_reinterp (M : Structure S) (g h) (env : Nat → M.D) (t : Term S) :
-    t.onlySyms (fun f => decide (S.fnRole f ≠ .normatif)) = true →
+    t.onlySyms (fun f => decide (S.fnRole f ≠ .normative)) = true →
       t.eval (M.reinterp g h) env = t.eval M env := by
   induction t with
   | var n => intro _; rfl
@@ -263,7 +263,7 @@ theorem Term.eval_reinterp (M : Structure S) (g h) (env : Nat → M.D) (t : Term
     intro hd
     simp only [Term.onlySyms, Bool.and_eq_true, decide_eq_true_eq] at hd
     have hall := allFin_spec hd.2
-    show (if S.fnRole f = .normatif then g f else M.fn f) (fun i => (a i).eval (M.reinterp g h) env) =
+    show (if S.fnRole f = .normative then g f else M.fn f) (fun i => (a i).eval (M.reinterp g h) env) =
       M.fn f (fun i => (a i).eval M env)
     rw [ite_eq_right hd.1, show (fun i => (a i).eval (M.reinterp g h) env) = (fun i => (a i).eval M env)
       from funext fun i => ih i (hall i)]
@@ -283,7 +283,7 @@ theorem Formula.eval_reinterp (M : Structure S) (g h) (φ : Formula S) :
     intro hd env
     simp only [Formula.onlySyms, Bool.and_eq_true, decide_eq_true_eq] at hd
     have hall := allFin_spec hd.2
-    show (if S.relRole r = .normatif then h r else M.rel r) (fun i => (a i).eval (M.reinterp g h) env) ↔
+    show (if S.relRole r = .normative then h r else M.rel r) (fun i => (a i).eval (M.reinterp g h) env) ↔
       M.rel r (fun i => (a i).eval M env)
     rw [ite_eq_right hd.1, show (fun i => (a i).eval (M.reinterp g h) env) = (fun i => (a i).eval M env)
       from funext fun i => Term.eval_reinterp M g h env (a i) (hall i)]
@@ -309,7 +309,7 @@ theorem Formula.eval_reinterp (M : Structure S) (g h) (φ : Formula S) :
     intro hd env
     exact ⟨fun ⟨d, x⟩ => ⟨d, (ih hd (cons d env)).1 x⟩, fun ⟨d, x⟩ => ⟨d, (ih hd (cons d env)).2 x⟩⟩
 
-/-- Hume yasası: bütün öncülleri betimsel olan bir kuram için politika hükmü yoktur. -/
+/-- Hume's law: a theory whose premises are all descriptive has no policy verdict. -/
 theorem hume_law {T : Theory S} {φ : Formula S} (hT : ∀ ψ ∈ T.axioms, ψ.descriptive = true) :
     ¬ Nonempty (PolicyVerdict T φ) := by
   rintro ⟨v⟩
@@ -318,11 +318,11 @@ theorem hume_law {T : Theory S} {φ : Formula S} (hT : ∀ ψ ∈ T.axioms, ψ.d
   exact ⟨v.alt_adm, fun ψ hψ env =>
     (Formula.eval_reinterp v.world v.g v.h ψ (hT ψ hψ) env).2 (v.world_ok.2 ψ hψ env)⟩
 
-/-- Aynı olgular: alternatif dünya bütün betimsel sembollerde asıl dünyayla aynıdır;
-asıl dünyada sonuç doğrudur, alternatifte değildir. -/
+/-- Same facts: the alternative world agrees with the actual world on every descriptive
+symbol; the conclusion holds in the actual world and fails in the alternative. -/
 theorem verdict_same_facts {T : Theory S} {φ : Formula S} (v : PolicyVerdict T φ) :
-    (∀ f, S.fnRole f ≠ .normatif → (v.world.reinterp v.g v.h).fn f = v.world.fn f) ∧
-    (∀ r, S.relRole r ≠ .normatif → (v.world.reinterp v.g v.h).rel r = v.world.rel r) ∧
+    (∀ f, S.fnRole f ≠ .normative → (v.world.reinterp v.g v.h).fn f = v.world.fn f) ∧
+    (∀ r, S.relRole r ≠ .normative → (v.world.reinterp v.g v.h).rel r = v.world.rel r) ∧
     v.world.Sat φ ∧ ¬ (v.world.reinterp v.g v.h).Sat φ :=
   ⟨fun _ hf => ite_eq_right hf, fun _ hr => ite_eq_right hr, v.entails _ v.world_ok, v.fails⟩
 

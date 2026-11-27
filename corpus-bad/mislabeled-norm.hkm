@@ -1,7 +1,7 @@
 (hakem 1)
-; KÖTÜ BELGE: değer öncülü "Ought" ampirik diye etiketlenmiş. Olgular sabitken
-; değiştirilebilecek normatif sembol kalmaz; politika hükmü kurulamaz (Hume).
-(sig pol (fn act 0 ampirik) (rel Harm 1 ampirik) (rel Ought 1 ampirik))
+; BAD DOCUMENT: the value premise "Ought" is labelled empirical. With the facts fixed,
+; no normative symbol is left to vary, so no policy verdict can be built (Hume).
+(sig pol (fn act 0 empirical) (rel Harm 1 empirical) (rel Ought 1 empirical))
 (theory WithNorm pol
   (ax fact (Harm act))
   (ax norm (all (imp (Harm v0) (Ought v0)))))

@@ -2,30 +2,30 @@ import Hakem.Lang.SExp
 import Hakem.Logic
 
 /-!
-# Hakem dili — sözdizimi
+# Hakem language — syntax
 
-Bir belge, girdilerin dizisidir. Adlar dizgedir; değişkenler:
-* `vL`: bağlı değişken, `L` bağlayıcı düzeyi (dıştan içe 0, 1, …),
-* `pJ`: sözlük eşlemesinde, eşlenen sembolün `J`. argümanı.
+A document is a sequence of entries. Names are strings; variables are:
+* `vL`: bound variable, `L` the binder level (0, 1, … from the outside in),
+* `pJ`: in a glossary, the `J`-th argument of the symbol being mapped.
 
 ```
 (hakem 1)
-(sig AD (fn AD İKİLİK ROL)* (rel AD İKİLİK ROL)*)        ; ROL: tanim | ampirik | normatif
-(theory AD SÖZLÜK (ax AD FORMÜL)*)
-(lemma AD KURAM FORMÜL İSPAT)
-(morph AD SÖZLÜK1 SÖZLÜK2 (fn AD TERİM)* (rel AD FORMÜL)*)
-(analogy AD KURAM1 KURAM2 EŞLEME MODEL (oblig AKSİYOM-ADI İSPAT)*)
-(refute AD KURAM1 KURAM2 EŞLEME FORMÜL İSPAT MODEL)
-(verdict AD KURAM FORMÜL İSPAT MODEL (alt (fn AD DEĞER*)* (rel AD DEĞER*)*))
+(sig NAME (fn NAME ARITY ROLE)* (rel NAME ARITY ROLE)*)  ; ROLE: definitional | empirical | normative
+(theory NAME SIG (ax NAME FORMULA)*)
+(lemma NAME THEORY FORMULA PROOF)
+(morph NAME SIG1 SIG2 (fn NAME TERM)* (rel NAME FORMULA)*)
+(analogy NAME THEORY1 THEORY2 MORPH MODEL (oblig AXIOM-NAME PROOF)*)
+(refute NAME THEORY1 THEORY2 MORPH FORMULA PROOF MODEL)
+(verdict NAME THEORY FORMULA PROOF MODEL (alt (fn NAME VALUE*)* (rel NAME VALUE*)*))
 ```
 
-Formül: `false`, `(= T U)`, `(not A)`, `(imp A B)`, `(and A B)`, `(or A B)`, `(all A)`,
-`(ex A)`, `(R T*)`. Terim: `vL`, `pJ`, `c`, `(f T*)`.
-İspat: `(hyp N)`, `(ax AD)`, `(falsumE A P)`, `(impI A P)`, `(impE P Q)`, `(andI P Q)`,
+Formula: `false`, `(= T U)`, `(not A)`, `(imp A B)`, `(and A B)`, `(or A B)`, `(all A)`,
+`(ex A)`, `(R T*)`. Term: `vL`, `pJ`, `c`, `(f T*)`.
+Proof: `(hyp N)`, `(ax NAME)`, `(falsumE A P)`, `(impI A P)`, `(impE P Q)`, `(andI P Q)`,
 `(andE1 P)`, `(andE2 P)`, `(orI1 B P)`, `(orI2 A P)`, `(orE P Q R)`, `(allI P)`,
 `(allE T P)`, `(exI (lam A) T P)`, `(exE C P Q)`, `(refl T)`, `(eqE (lam A) P Q)`, `(em A)`.
-Model: `(model BOYUT (fn AD DEĞER*)* (rel AD DEĞER*)*)`; tablo sırası:
-argüman vektörü `(a0, a1, …)` için konum `a0 + B·a1 + B²·a2 + …`.
+Model: `(model SIZE (fn NAME VALUE*)* (rel NAME VALUE*)*)`; table order:
+the argument vector `(a0, a1, …)` is at position `a0 + B·a1 + B²·a2 + …`.
 -/
 
 inductive RTerm where
@@ -67,14 +67,14 @@ inductive RProof where
   | em      : RForm → RProof
   deriving Repr, Inhabited
 
-/-- Sonlu model: boyut ve sembol tabloları. -/
+/-- Finite model: size and symbol tables. -/
 structure RModel where
   size : Nat
   fns  : List (String × List Nat)
   rels : List (String × List Nat)
   deriving Repr, Inhabited
 
-/-- Sözlükte bir sembol bildirimi. -/
+/-- A symbol declaration in a vocabulary. -/
 structure SymDecl where
   name  : String
   arity : Nat
@@ -91,13 +91,13 @@ inductive REntry where
   | verdict : String → String → RForm → RProof → RModel → RModel → REntry
   deriving Repr, Inhabited
 
-/-! ## Ağaçtan sözdizimine -/
+/-! ## From tree to syntax -/
 
 def atomStr : SExp → Option String
   | .atom s => some s
   | _ => none
 
-/-- Ondalık rakamlar (boş olmayan). Çekirdekte hesaplanabilir. -/
+/-- Decimal digits (non-empty). Computable in the kernel. -/
 def digitsVal : List Char → Nat → Option Nat
   | [], acc => some acc
   | c :: cs, acc =>
@@ -111,9 +111,9 @@ def natOf (s : String) : Option Nat :=
 def atomNat (x : SExp) : Option Nat := (atomStr x).bind natOf
 
 def parseRole : String → Option Role
-  | "tanim" => some .tanim
-  | "ampirik" => some .ampirik
-  | "normatif" => some .normatif
+  | "definitional" => some .definitional
+  | "empirical" => some .empirical
+  | "normative" => some .normative
   | _ => none
 
 def varOf (s : String) : Option RTerm :=
@@ -148,7 +148,7 @@ def decodeForm : SExp → Option RForm
   | .list (.atom r :: args) => (decodeTerms args).map (RForm.rel r)
   | _ => none
 
-/-- `(lam A)`: bir bağlayıcı açan formül gövdesi. -/
+/-- `(lam A)`: a formula body that opens one binder. -/
 def decodeLam : SExp → Option RForm
   | .list [.atom "lam", a] => decodeForm a
   | _ => none
@@ -176,7 +176,7 @@ def decodeProof : SExp → Option RProof
 
 def decodeNats : List SExp → Option (List Nat) := List.mapM atomNat
 
-/-- `(fn AD DEĞER*)` ya da `(rel AD DEĞER*)` tablolarını ayır. -/
+/-- Split `(fn NAME VALUE*)` and `(rel NAME VALUE*)` tables. -/
 def decodeTables : List SExp → Option (List (String × List Nat) × List (String × List Nat))
   | [] => some ([], [])
   | .list (.atom "fn" :: .atom n :: vs) :: rest => do
@@ -246,7 +246,7 @@ def decodeEntry : SExp → Option REntry
     pure (.verdict n t (← decodeForm f) (← decodeProof p) (← decodeModel w) (← decodeAlt alt))
   | _ => none
 
-/-- Belge: `(hakem 1)` başlığı ve girdiler. -/
+/-- Document: the `(hakem 1)` header and entries. -/
 def decodeDoc : List SExp → Option (List REntry)
   | .list [.atom "hakem", .atom "1"] :: rest => rest.mapM decodeEntry
   | _ => none

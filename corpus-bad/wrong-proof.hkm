@@ -1,6 +1,6 @@
 (hakem 1)
-; KÖTÜ BELGE: lemmanın ispatı yanlış aksiyomu kullanır (virman dalında kredi aksiyomu).
-(sig bank (fn Net 1 ampirik) (rel Tr 2 tanim) (rel Cr 2 tanim))
+; BAD DOCUMENT: the lemma's proof uses the wrong axiom (the loan axiom in the transfer branch).
+(sig bank (fn Net 1 empirical) (rel Tr 2 definitional) (rel Cr 2 definitional))
 (theory Banking bank
   (ax trNet (all (all (imp (Tr v0 v1) (= (Net v0) (Net v1))))))
   (ax crNet (all (all (imp (Cr v0 v1) (= (Net v0) (Net v1)))))))

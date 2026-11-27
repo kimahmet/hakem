@@ -1,12 +1,12 @@
 #!/bin/sh
-# Hakem: yerel denetim hattı. Çıktı: KARAR.md
-# 1) Lean çekirdeği (lake build)  2) bağımsız çekirdek nanoda  3) yargıç (tools/Judge.lean)
+# Hakem: local checking pipeline. Output: VERDICT.md
+# 1) Lean kernel (lake build)  2) independent kernel nanoda  3) judge (tools/Judge.lean)
 set -eu
 cd "$(dirname "$0")/.."
 OUT=.lake/hakem
 mkdir -p "$OUT"
-# Eski karar kalmasın: hat başarısız olursa KARAR.md hiç olmamalı.
-rm -f KARAR.md
+# No stale verdict: if the pipeline fails, VERDICT.md must not exist.
+rm -f VERDICT.md
 lake build Hakem Challenge Solution
 lake env leanexport Solution > "$OUT/solution.ndjson"
 BIN="$(dirname "$(lake env which lean)")"
@@ -25,6 +25,6 @@ set +e
 CODE=$?
 set -e
 tail -1 "$OUT/nanoda.txt"
-# Önce geçici dosyaya yaz: yargıç hata verirse eski KARAR.md bozulmaz.
-lake env lean --run tools/Judge.lean comparator.json "$OUT/nanoda.txt" "$CODE" > "$OUT/KARAR.md" || { cat "$OUT/KARAR.md" | head -20; exit 1; }
-mv "$OUT/KARAR.md" KARAR.md
+# Write to a temporary file first, so a judge error cannot leave a partial VERDICT.md.
+lake env lean --run tools/Judge.lean comparator.json "$OUT/nanoda.txt" "$CODE" > "$OUT/VERDICT.md" || { cat "$OUT/VERDICT.md" | head -20; exit 1; }
+mv "$OUT/VERDICT.md" VERDICT.md

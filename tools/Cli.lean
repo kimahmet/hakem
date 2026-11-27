@@ -2,12 +2,12 @@ import Hakem.Lang.Check
 import Lean.Data.Json
 
 /-!
-# `hakem` komut satırı aracı
+# `hakem` command-line tool
 
-* `hakem check DOSYA…` — belgeleri derlenmiş denetleyiciyle denetler.
-* `hakem json DOSYA` — aynı denetim, ajanlar için tek satır JSON (özerk döngüler).
-* `hakem cert DOSYA AD` — belge ağacını Lean terimi olarak yazan ve
-  `checkTree` hesabını çekirdeğe yaptıran bir sertifika dosyası basar.
+* `hakem check FILE…` — check documents with the compiled checker.
+* `hakem json FILE` — the same check, as one line of JSON for agents (autonomous loops).
+* `hakem cert FILE NAME` — print a certificate file that states the document tree as a Lean
+  term, so that `checkTree` can be computed by the kernel.
 -/
 
 partial def sexpToLean : SExp → String
@@ -17,21 +17,21 @@ partial def sexpToLean : SExp → String
 def report (path : String) : IO Bool := do
   let s ← IO.FS.readFile path
   match readSExps s with
-  | none => IO.println s!"{path}: OKUNAMADI"; return false
+  | none => IO.println s!"{path}: UNREADABLE"; return false
   | some es =>
     match Doc.claimsTree es with
-    | none => IO.println s!"{path}: ÇEVRİLEMEDİ (bilinmeyen ad, ikilik ya da biçim)"; return false
+    | none => IO.println s!"{path}: UNELABORATED (unknown name, wrong arity or malformed entry)"; return false
     | some cs =>
       let mut ok := true
       for c in cs do
         let r := checkClaim c
         ok := ok && r
-        IO.println s!"{path}: {c.name}: {if r then "DENETİMDEN GEÇTİ" else "RET"}"
+        IO.println s!"{path}: {c.name}: {if r then "ACCEPTED" else "REJECTED"}"
       return ok
 
 def jsonStr (s : String) : String := (Lean.Json.str s).compress
 
-/-- Makinece okunur karar: `{"file":…, "status":"accepted"|"rejected"|"unreadable"|"unelaborated",
+/-- Machine-readable verdict: `{"file":…, "status":"accepted"|"rejected"|"unreadable"|"unelaborated",
 "claims":[{"name":…, "kind":…, "accepted":…}]}`. -/
 def reportJson (path : String) : IO Bool := do
   let s ← IO.FS.readFile path
@@ -60,11 +60,11 @@ def main (args : List String) : IO UInt32 := do
   | ["cert", path, name] =>
     let s ← IO.FS.readFile path
     match readSExps s with
-    | none => IO.eprintln "okunamadı"; return 1
+    | none => IO.eprintln "unreadable"; return 1
     | some es =>
       IO.println s!"import Hakem.Lang.Check
 import Lean.Data.Json\n"
-      IO.println s!"/-- `{path}` belgesinin ağacı (okuyucunun çıktısı). -/"
+      IO.println s!"/-- Tree of `{path}` (output of the reader). -/"
       IO.println s!"def {name}_tree : List SExp := [{", ".intercalate (es.map sexpToLean)}]\n"
       return 0
-  | _ => IO.eprintln "kullanım: hakem check DOSYA… | hakem json DOSYA | hakem cert DOSYA AD"; return 2
+  | _ => IO.eprintln "usage: hakem check FILE… | hakem json FILE | hakem cert FILE NAME"; return 2

@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use or extend Hakem, please cite it as below. / Hakem'i kullanır ya da geliştirirseniz lütfen aşağıdaki gibi atıf yapın."
+message: "If you use or extend Hakem, please cite it as below."
 title: "Proof Is All You Need: A Kernel-Checked Writing System for Automating the Oversight of Autonomous AI Learning"
 abstract: >-
   Hakem is a small language in which models (human or AI) write theories,
