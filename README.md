@@ -93,7 +93,7 @@ KABUL** alan bir iddia için şunlar sağlanmıştır:
 | `Hakem/Lang/` | anlam güvenilen, denetim ispatlı | Hakem dili |
 | `Challenge.lean` | güvenilen | İddia metinleri |
 | `Solution/` | **güvenilmeyen** | İspatlar |
-| `corpus/`, `Corpus/` | güvenilen | Kabul edilmiş belgeler ve ağaçları |
+| `corpus/`, `Kulliyat/` | güvenilen | Kabul edilmiş belgeler ve ağaçları |
 | `corpus-bad/` | — | Reddedilmesi gereken belgeler |
 | `tools/` | güvenilen | Yargıç, CLI, özerk döngü |
 | `paper/` | — | Makale (TR/EN) |

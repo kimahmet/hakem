@@ -137,7 +137,7 @@ değerler `B` modülünde alınır.
 ```sh
 lake exe hakem check BELGE.hkm…     # derlenmiş denetleyici (hızlı)
 lake exe hakem cert BELGE.hkm AD     # belge ağacını Lean terimi olarak basar
-python3 -I tools/corpus.py .         # corpus/*.hkm → Corpus/, iddialar ve çekirdek ispatları
+python3 -I tools/corpus.py .         # corpus/*.hkm → Kulliyat/, iddialar ve çekirdek ispatları
 ./tools/hakem.sh                     # bütün iddialar: Lean çekirdeği + nanoda → KARAR.md
 ```
 

@@ -1,5 +1,5 @@
 import Hakem
-import Corpus
+import Kulliyat
 import Solution.Lang
 
 /-! Güvenilmeyen ispatlar: külliyat (yalnızca çekirdek hesabı). -/

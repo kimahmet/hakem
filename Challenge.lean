@@ -1,5 +1,5 @@
 import Hakem
-import Corpus
+import Kulliyat
 
 /-!
 # İddialar (güvenilen metin)

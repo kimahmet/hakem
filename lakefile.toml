@@ -1,6 +1,6 @@
 name = "AnalojiDenetcisi"
 version = "0.4.0"
-defaultTargets = ["Hakem", "Corpus", "Solution", "hakem"]
+defaultTargets = ["Hakem", "Kulliyat", "Solution", "hakem"]
 
 # Güvenilen: çekirdek ve modeller (anlam tabanı), iddia metinleri.
 [[lean_lib]]
@@ -9,9 +9,9 @@ name = "Hakem"
 [[lean_lib]]
 name = "Challenge"
 
-# Güvenilen: külliyat belgelerinin ağaçları (tools/corpus.py üretir).
+# Güvenilen: külliyat belgelerinin ağaçları (tools/corpus.py üretir; macOS'ta `corpus/` ile çakışmasın diye ayrı ad).
 [[lean_lib]]
-name = "Corpus"
+name = "Kulliyat"
 
 # Güvenilmeyen: ispatlar.
 [[lean_lib]]

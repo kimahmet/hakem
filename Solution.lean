@@ -6,7 +6,7 @@ import Solution.Corpus
 import Solution.Finite
 import Solution.Lang
 import Solution.Meta
-import Corpus
+import Kulliyat
 
 /-!
 # İddialar (güvenilen metin)
