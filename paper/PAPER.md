@@ -1,6 +1,8 @@
-# Hakem: A Kernel-Checked Writing System for Machine Reasoning
+# Proof Is All You Need
 
-### Automating the oversight of autonomous AI learning across disciplines
+### Hakem: a kernel-checked writing system for automating the oversight of autonomous AI learning
+
+*PDF: [main.pdf](main.pdf) · LaTeX: [main.tex](main.tex)*
 
 **kimahmet** (vision, direction) — implementation developed with the assistance of Claude (Anthropic)
 

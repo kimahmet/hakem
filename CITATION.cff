@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use or extend Hakem, please cite it as below. / Hakem'i kullanır ya da geliştirirseniz lütfen aşağıdaki gibi atıf yapın."
-title: "Hakem: A Kernel-Checked Writing System for Machine Reasoning"
+title: "Proof Is All You Need: A Kernel-Checked Writing System for Automating the Oversight of Autonomous AI Learning"
 abstract: >-
   Hakem is a small language in which models (human or AI) write theories,
   glossaries, analogies, claims, proofs and counterexamples, together with a

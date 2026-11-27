@@ -1,6 +1,8 @@
-# Hakem: Makine Akıl Yürütmesi İçin Çekirdekte Denetlenen Bir Yazı
+# Proof Is All You Need (İspat Yeter)
 
-### Yapay zekânın özerk öğrenmesindeki denetimin disiplinler arası otomatikleşmesi
+### Hakem: yapay zekânın özerk öğrenmesindeki denetimi otomatikleştiren, çekirdekte denetlenen bir yazı
+
+*İngilizce PDF: [main.pdf](main.pdf)*
 
 **kimahmet** (vizyon, yönlendirme) — uygulama Claude (Anthropic) yardımıyla geliştirilmiştir
 

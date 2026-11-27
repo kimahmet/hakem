@@ -3,3 +3,7 @@
 /rejected
 /ledger.jsonl
 .DS_Store
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/hakem-arxiv.tar.gz

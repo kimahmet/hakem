@@ -7,7 +7,9 @@
 > Hakem is the vision of **kimahmet** and was developed under their direction.
 > Kullanırken ya da geliştirirken lütfen atıf yapın / Please cite: [`CITATION.cff`](CITATION.cff) · [`NOTICE`](NOTICE)
 
-[Türkçe](#türkçe) · [English](#english) · Makale: [MAKALE.md](paper/MAKALE.md) · Paper: [PAPER.md](paper/PAPER.md)
+**Makale / Paper: [Proof Is All You Need](paper/main.pdf)** ([PDF](paper/main.pdf) · [LaTeX](paper/main.tex) · [EN](paper/PAPER.md) · [TR](paper/MAKALE.md))
+
+[Türkçe](#türkçe) · [English](#english)
 
 ---
 

@@ -1,0 +1,66 @@
+\begin{thebibliography}{10}
+
+\bibitem{barendregt2005challenge}
+Henk Barendregt and Freek Wiedijk.
+\newblock The challenge of computer mathematics.
+\newblock {\em Philosophical Transactions of the Royal Society A},
+  363(1835):2351--2375, 2005.
+
+\bibitem{carneiro2024lean4lean}
+Mario Carneiro.
+\newblock {Lean4Lean}: Towards a verified typechecker for {Lean}, in {Lean},
+  2024.
+
+\bibitem{demoura2021lean4}
+Leonardo de~Moura and Sebastian Ullrich.
+\newblock The {Lean} 4 theorem prover and programming language.
+\newblock In {\em Automated Deduction -- CADE 28}, volume 12699 of {\em Lecture
+  Notes in Computer Science}, pages 625--635. Springer, 2021.
+
+\bibitem{goguen1992institutions}
+Joseph~A. Goguen and Rod~M. Burstall.
+\newblock Institutions: Abstract model theory for specification and
+  programming.
+\newblock {\em Journal of the ACM}, 39(1):95--146, 1992.
+
+\bibitem{hume1739treatise}
+David Hume.
+\newblock {\em A Treatise of Human Nature}.
+\newblock 1739.
+
+\bibitem{megill2019metamath}
+Norman Megill and David~A. Wheeler.
+\newblock {\em Metamath: A Computer Language for Mathematical Proofs}.
+\newblock Lulu Press, 2019.
+
+\bibitem{schurz1997isought}
+Gerhard Schurz.
+\newblock {\em The Is-Ought Problem: An Investigation in Philosophical Logic}.
+\newblock Kluwer Academic Publishers, 1997.
+
+\bibitem{spivak2012ologs}
+David~I. Spivak and Robert~E. Kent.
+\newblock Ologs: A categorical framework for knowledge representation.
+\newblock {\em PLoS ONE}, 7(1):e24274, 2012.
+
+\bibitem{mathlib2020}
+{The mathlib Community}.
+\newblock The {Lean} mathematical library.
+\newblock In {\em Proceedings of the 9th ACM SIGPLAN International Conference
+  on Certified Programs and Proofs (CPP)}, pages 367--381, 2020.
+
+\bibitem{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N. Gomez, Lukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)},
+  2017.
+
+\bibitem{yang2023leandojo}
+Kaiyu Yang, Aidan~M. Swope, Alex Gu, Rahul Chalamala, Peiyang Song, Shixing Yu,
+  Saad Godil, Ryan Prenger, and Anima Anandkumar.
+\newblock {LeanDojo}: Theorem proving with retrieval-augmented language models.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)},
+  2023.
+
+\end{thebibliography}
