@@ -236,8 +236,9 @@ Acceptance does **not** establish:
 * that a model is faithful to the real discipline;
 * that measured values or value choices are right;
 * that the local run resists adversarial input. That requires
-  `lake comparator --paranoid` on Linux, with a sandbox and five kernels. A CI workflow
-  for it is included.
+  `lake comparator --paranoid` on Linux, with a sandbox and several kernels. This runs in
+  CI on every push. In its first run (27 November 2026) all six kernels accepted: Lean
+  paranoid, lean4lean, nanoda, con-leche, con-ron, and Lean's default kernel.
 
 ## 7. Adversarial validation
 
@@ -290,7 +291,8 @@ We report these because they are the failure mode a referee must anticipate.
   needs no trust, because its output is checked.
 * **Independent implementations.** A second reader and checker, written by another party
   against `DIL.md` and the conformance corpus.
-* **Adversarial deployment.** Running comparator with all five kernels in CI.
+* **Adversarial deployment.** Comparator already runs in CI; next, signed verdicts and
+  reproducible builds so that third parties can verify a verdict offline.
 
 ## 10. Conclusion
 

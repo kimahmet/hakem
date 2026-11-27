@@ -82,7 +82,7 @@ KABUL** alan bir iddia için şunlar sağlanmıştır:
 * Ölçülmüş değerler ve değer seçimleri.
 * Doğal dildeki okumaların ifadeyi doğru anlatması.
 * Yerel çalıştırmada saldırgan girdiye karşı tam güvence. Bunun için Linux'ta
-  `lake comparator --paranoid` gerekir (CI iş akışında var).
+  `lake comparator --paranoid` gerekir. Bu denetim CI'da her gönderimde çalışır ve altı çekirdeğin hepsi kabul ediyor.
 
 ### Depo
 
@@ -181,7 +181,7 @@ Only the judge says "proven". A claim with **BİÇİMSEL KABUL** (formal accepta
 * Measured values and value choices.
 * That natural-language readings describe their statements correctly.
 * Full protection against adversarial input in local runs. That requires
-  `lake comparator --paranoid` on Linux (included in CI).
+  `lake comparator --paranoid` on Linux. This runs in CI on every push, and all six kernels accept.
 
 ### Contributing
 

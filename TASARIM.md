@@ -221,7 +221,7 @@ desteklemez.
 | `native_decide`, `implemented_by`, `extern` | Aksiyom listesi (`…_native…` aksiyomları) | Evet: `SelfTest.Native` |
 | Özel gösterim/örnek ile ifadenin anlamını değiştirmek | İfade güvenilen ortamda basılır; çözümün gösterimi `Challenge`'a sızamaz | Hayır (sınama eklenmeli) |
 | Çekirdeği atlayan meta-kod (denetlenmemiş bildirim eklemek) | Dökümün bağımsız çekirdekte baştan yeniden denetimi | Hayır (sınama eklenmeli) |
-| Kötü niyetli `.olean` dosyaları, derleme sırasında kod çalıştırma | **Yerelde karşılanmıyor.** Linux'ta `lake comparator --paranoid` (bwrap sandbox, `.olean` yüklemez) | CI iş akışı yazıldı, çalıştırılmadı |
+| Kötü niyetli `.olean` dosyaları, derleme sırasında kod çalıştırma | **Yerelde karşılanmıyor.** Linux'ta `lake comparator --paranoid` (bwrap sandbox, `.olean` yüklemez) | Evet: CI `comparator` işi, her gönderimde |
 | Tüm çekirdeklerde ortak bir hata | Karşılanamaz (tip kuramının kendisi) | — |
 
 Yerel yargıç `.olean` dosyalarını belleğe yükler. Bu yüzden saldırgan girdiye karşı
@@ -264,4 +264,4 @@ lake comparator --paranoid   # yalnızca Linux (bwrap); CI'da
    biçimde yapılır.
 6. **İfade yazarlığı.** `Challenge.lean`'i kim yazar? Yapay zekâ ifade önerebilir,
    ama ifadeyi güvenilen tarafa almak bir insan kararıdır ve kayda geçmelidir.
-7. **CI iş akışı** yazıldı ama çalıştırılmadı (uzak depo yok).
+7. **CI.** `lake comparator --paranoid` GitHub Actions'ta her gönderimde çalışır; ilk çalıştırmada (27 Kasım 2026) altı çekirdek de kabul etti: Lean paranoid, lean4lean, nanoda, con-leche, con-ron, Lean varsayılan.

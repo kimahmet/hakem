@@ -228,8 +228,9 @@ Kabul şunları **göstermez**:
 * bir modelin gerçek disipline sadık olduğunu;
 * ölçülmüş değerlerin ya da değer seçimlerinin doğru olduğunu;
 * yerel çalıştırmanın saldırgan girdiye dayanıklı olduğunu. Bunun için Linux'ta
-  sandbox ve beş çekirdekle `lake comparator --paranoid` gerekir. Bunun için bir CI
-  iş akışı depoda vardır.
+  sandbox ve birden çok çekirdekle `lake comparator --paranoid` gerekir. Bu denetim CI'da
+  her gönderimde çalışır. İlk çalıştırmada (27 Kasım 2026) altı çekirdeğin hepsi kabul etti:
+  Lean paranoid, lean4lean, nanoda, con-leche, con-ron ve Lean'in varsayılan çekirdeği.
 
 ## 7. Saldırgan sınama
 
@@ -283,7 +284,9 @@ tam da budur.
   çünkü çıktısı denetlenir.
 * **Bağımsız uygulamalar.** Başka bir tarafın `DIL.md`'ye ve uyum külliyatına karşı
   yazdığı ikinci bir okuyucu ve denetleyici.
-* **Saldırgan ortamda kullanım.** comparator'ın beş çekirdekle CI'da çalıştırılması.
+* **Saldırgan ortamda kullanım.** comparator CI'da zaten çalışıyor. Sıradaki adım: imzalı
+  kararlar ve yeniden üretilebilir derlemeler; böylece üçüncü taraflar bir kararı çevrimdışı
+  doğrulayabilir.
 
 ## 10. Sonuç
 
