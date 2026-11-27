@@ -1,0 +1,11 @@
+(hakem 1)
+; KÖTÜ BELGE: değer öncülü "Ought" ampirik diye etiketlenmiş. Olgular sabitken
+; değiştirilebilecek normatif sembol kalmaz; politika hükmü kurulamaz (Hume).
+(sig pol (fn act 0 ampirik) (rel Harm 1 ampirik) (rel Ought 1 ampirik))
+(theory WithNorm pol
+  (ax fact (Harm act))
+  (ax norm (all (imp (Harm v0) (Ought v0)))))
+(verdict prevent WithNorm (Ought act)
+  (impE (allE act (ax norm)) (ax fact))
+  (model 1 (fn act 0) (rel Harm 1) (rel Ought 1))
+  (alt (rel Ought 0)))

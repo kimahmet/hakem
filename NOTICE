@@ -1,0 +1,29 @@
+Hakem — a kernel-checked language for machine reasoning
+Copyright 2026 kimahmet (https://github.com/kimahmet)
+
+This product originates from the vision and direction of kimahmet:
+an independent, small, auditable referee — a "writing system" for AI —
+through which models record, communicate and verify interdisciplinary
+results, and through which the oversight of autonomous AI learning can be
+automated.
+
+The implementation was developed with the assistance of Claude (Anthropic),
+working under kimahmet's direction.
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Under Section 4(d) of the License, redistributions and derivative works must
+retain this NOTICE file (or its attribution notices) in a readable form.
+Please cite this project when you use or extend it (see CITATION.cff).
+
+-----------------------------------------------------------------------------
+
+Bu ürün kimahmet'in vizyonundan ve yönlendirmesinden doğmuştur: modellerin
+disiplinler arası sonuçları kaydettiği, birbirine ilettiği ve denetlediği;
+yapay zekânın özerk öğrenmesinin denetiminin otomatikleşebildiği bağımsız,
+küçük, denetlenebilir bir hakem — yapay zekâ için bir "yazı".
+
+Uygulama, kimahmet'in yönlendirmesiyle Claude (Anthropic) yardımıyla
+geliştirilmiştir. Yeniden dağıtımlar ve türev çalışmalar bu NOTICE dosyasını
+(Lisans, Bölüm 4(d)) okunur biçimde korumalıdır. Kullanırken ya da
+geliştirirken lütfen atıf yapın (CITATION.cff).

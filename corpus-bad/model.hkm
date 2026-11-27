@@ -1,0 +1,11 @@
+(hakem 1)
+; KÖTÜ BELGE: metaforun karşı örneği hedef kuramın modeli değildir (kredi mevduatı değiştirmiyor).
+(sig phys (fn E 1 ampirik) (rel Exch 2 tanim))
+(theory Physics phys (ax cons (all (all (imp (Exch v0 v1) (= (E v0) (E v1)))))))
+(sig bank (fn Dep 1 ampirik) (rel Cr 2 tanim))
+(theory Banking bank (ax crMoney (all (all (imp (Cr v0 v1) (not (= (Dep v0) (Dep v1))))))))
+(morph dep phys bank (fn E (Dep p0)) (rel Exch (Cr p0 p1)))
+(refute depositsMetaphor Physics Banking dep
+  (all (all (imp (Exch v0 v1) (= (E v0) (E v1)))))
+  (ax cons)
+  (model 2 (fn Dep 0 0) (rel Cr 0 0 1 0)))

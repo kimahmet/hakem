@@ -1,0 +1,12 @@
+(hakem 1)
+; KÖTÜ BELGE: lemmanın ispatı yanlış aksiyomu kullanır (virman dalında kredi aksiyomu).
+(sig bank (fn Net 1 ampirik) (rel Tr 2 tanim) (rel Cr 2 tanim))
+(theory Banking bank
+  (ax trNet (all (all (imp (Tr v0 v1) (= (Net v0) (Net v1))))))
+  (ax crNet (all (all (imp (Cr v0 v1) (= (Net v0) (Net v1)))))))
+(lemma stepNet Banking
+  (all (all (imp (or (Tr v0 v1) (Cr v0 v1)) (= (Net v0) (Net v1)))))
+  (allI (allI (impI (or (Tr v0 v1) (Cr v0 v1))
+    (orE (hyp 0)
+      (impE (allE v1 (allE v0 (ax crNet))) (hyp 0))
+      (impE (allE v1 (allE v0 (ax crNet))) (hyp 0)))))))

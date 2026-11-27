@@ -1,0 +1,16 @@
+(hakem 1)
+; Olgu ve değer: `Ought` normatif bir semboldür.
+
+(sig pol
+  (fn act 0 ampirik)       ; belirli bir faaliyet
+  (rel Harm 1 ampirik)     ; zarar verir
+  (rel Ought 1 normatif))  ; önlenmelidir
+
+(theory WithNorm pol
+  (ax fact (Harm act))
+  (ax norm (all (imp (Harm v0) (Ought v0)))))
+
+(verdict prevent WithNorm (Ought act)
+  (impE (allE act (ax norm)) (ax fact))
+  (model 1 (fn act 0) (rel Harm 1) (rel Ought 1))
+  (alt (rel Ought 0)))

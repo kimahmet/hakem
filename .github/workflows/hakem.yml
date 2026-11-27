@@ -1,0 +1,60 @@
+name: Hakem
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Yerel hattın aynısı: derleme, öz-sınama, külliyat, Lean çekirdeği + nanoda → KARAR.md
+  judge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: elan
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Derleme
+        run: lake build
+
+      - name: Külliyat belgeleri (derlenmiş denetleyici)
+        run: lake exe hakem check corpus/*.hkm
+
+      - name: Yargıç öz-sınaması
+        run: ./tools/selftest.sh
+
+      - name: Karar (Lean çekirdeği + nanoda)
+        run: ./tools/hakem.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KARAR
+          path: KARAR.md
+
+  # Saldırgan girdiye karşı tam denetim: sandbox + beş çekirdek.
+  comparator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: elan
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: bubblewrap
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+
+      - name: Derleme (lake-manifest.json için)
+        run: lake build
+
+      - name: lake comparator --paranoid
+        run: lake comparator --paranoid

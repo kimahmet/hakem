@@ -1,0 +1,33 @@
+{
+  "challenge_module": "Challenge",
+  "solution_module": "Solution",
+  "theorem_names": [
+    "satisfaction",
+    "transfer",
+    "source_consistent",
+    "compose_exists",
+    "refutation_sound",
+    "hume_law",
+    "verdict_same_facts",
+    "calculus_sound",
+    "finite_sat_iff",
+    "finite_models_sound",
+    "finite_refutes_sound",
+    "refutation_of_data",
+    "verdict_of_data",
+    "iso_sat",
+    "background_sound",
+    "calculus_sound_bg",
+    "entails_of_std",
+    "checkTree_sound",
+    "checkDoc_sound",
+    "korunum_holds",
+    "politika_holds"
+  ],
+  "definition_names": [],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
